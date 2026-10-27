@@ -1,0 +1,9 @@
+# dependensi build (esbuild)
+node_modules/
+
+# metadata Vercel (dibuat oleh `vercel link` / `vercel dev`)
+.vercel/
+
+# sampah OS / log
+.DS_Store
+npm-debug.log*
