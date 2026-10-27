@@ -26,6 +26,57 @@ python3 -m http.server 8000
 
 Atau cukup buka `index.html` langsung di browser (file://) — tetap berjalan.
 
+## Deploy ke Vercel
+
+Proyek ini **situs statis murni** (dua halaman HTML + JS yang sudah
+terkompilasi), jadi di Vercel memakai preset **Other** dengan root direktori
+repo. Semuanya sudah diatur di `vercel.json`, jadi tidak perlu mengubah
+Framework Preset lewat dashboard:
+
+```json
+{
+  "framework": null,
+  "installCommand": "npm install --no-audit --no-fund",
+  "buildCommand": "npm run vercel-build",
+  "outputDirectory": "."
+}
+```
+
+Arti tiap baris:
+
+| Kunci | Nilai | Kenapa |
+|---|---|---|
+| `framework` | `null` = preset **Other** | proyek bukan Next.js/Vite/CRA; Vercel tidak akan menebak-nebak framework |
+| `installCommand` | `npm install` | hanya perlu untuk esbuild (devDependency) |
+| `buildCommand` | `npm run vercel-build` → `npm run build` | mengompilasi `src/app.jsx` & `src/admin.jsx` jadi `app.js` & `admin.js`; hasil build juga sudah ikut di repo |
+| `outputDirectory` | `"."` (root repo) | `index.html` & `admin.html` ada di root, bukan di `public/` atau `dist/` |
+
+Langkah deploy:
+
+1. Buka [vercel.com/new](https://vercel.com/new) → import repo ini.
+2. **Root Directory** biarkan kosong (root repo) — jangan diarahkan ke subfolder.
+3. Framework Preset, Build Command, dan Output Directory **biarkan apa adanya**;
+   `vercel.json` yang menentukannya (nilainya menimpa setting dashboard).
+4. Deploy. Hasilnya:
+   - `/` → halaman pelanggan (`index.html`)
+   - `/admin.html` → panel admin
+
+Catatan:
+
+- Tautan antar-halaman memakai path relatif (`admin.html`, `index.html`,
+  `./vendor/...`, `./app.js`), jadi tetap jalan baik di root domain maupun di
+  preview deployment — tidak ada URL absolut yang perlu diubah.
+- `.vercelignore` mencegah `node_modules`, artefak tunnel lama (`tunnel.log`,
+  `tunnel-watchdog.sh`, `PUBLIC_URL.txt`), dan `README.md` ikut ter-upload
+  sebagai file publik.
+- `node_modules/` di-`.gitignore`; `package-lock.json` ikut di-commit supaya
+  versi esbuild saat build di Vercel sama dengan di lokal.
+- Data booking tetap disimpan di `localStorage` browser (tanpa backend), jadi
+  di Vercel pun tidak butuh database atau environment variable. Lihat bagian
+  *Menyambung ke backend sungguhan* bila ingin data terpusat.
+- `npm run start` (python http.server) hanya untuk lokal; Vercel tidak
+  menjalankan server apa pun.
+
 ## Logika yang di-port dari design
 
 Semua perilaku design dipertahankan:
@@ -75,7 +126,11 @@ bengkel-booking/
 ├── vendor/
 │   ├── react.js        # React 18 (UMD, lokal — tanpa CDN)
 │   └── react-dom.js
-└── package.json        # skrip build (esbuild)
+├── package.json        # skrip build (esbuild) + vercel-build
+├── package-lock.json   # versi esbuild terkunci untuk build di Vercel
+├── vercel.json         # preset deploy: Other, build, output = root
+├── .vercelignore       # file yang tidak di-upload/di-serve di Vercel
+└── .gitignore          # node_modules, .vercel, dll.
 ```
 
 ## Kustomisasi

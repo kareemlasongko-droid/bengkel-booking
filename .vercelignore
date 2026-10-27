@@ -1,0 +1,18 @@
+# Jangan ikut di-upload/di-serve saat deploy ke Vercel.
+# Catatan: package.json, package-lock.json, src/, dan vendor/ TETAP perlu
+# ikut ter-upload karena dipakai oleh langkah install & build.
+
+# dependensi lokal (Vercel install sendiri dari package.json)
+node_modules
+
+# repo & sandbox
+.git
+.arena
+
+# artefak hosting lama (Cloudflare quick tunnel) — hanya untuk lokal
+tunnel.log
+tunnel-watchdog.sh
+PUBLIC_URL.txt
+
+# dokumen
+README.md
