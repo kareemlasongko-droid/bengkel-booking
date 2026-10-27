@@ -1,6 +1,9 @@
 # dependensi build (esbuild)
 node_modules/
 
+# output build untuk Vercel — dibuat ulang oleh `npm run build:site`
+public/
+
 # metadata Vercel (dibuat oleh `vercel link` / `vercel dev`)
 .vercel/
 

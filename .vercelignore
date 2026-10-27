@@ -5,6 +5,9 @@
 # dependensi lokal (Vercel install sendiri dari package.json)
 node_modules
 
+# output build — dibuat ulang oleh `npm run build:site` saat deploy
+public
+
 # repo & sandbox
 .git
 .arena

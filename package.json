@@ -8,8 +8,9 @@
   },
   "scripts": {
     "build": "esbuild src/app.jsx --outfile=app.js --format=iife --jsx=transform --target=es2017 && esbuild src/admin.jsx --outfile=admin.js --format=iife --jsx=transform --target=es2017",
+    "build:site": "node scripts/build-static.mjs",
     "build:watch": "npm run build -- --watch",
-    "vercel-build": "npm run build",
+    "vercel-build": "npm run build && npm run build:site",
     "start": "python3 -m http.server 8000 --bind 0.0.0.0"
   },
   "devDependencies": {
