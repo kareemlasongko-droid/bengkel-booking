@@ -1,0 +1,14 @@
+{
+  "name": "bengkel-booking",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Sistem booking servis mobil untuk pelanggan — port dari design Main.dc.html + panel admin bengkel",
+  "scripts": {
+    "build": "esbuild src/app.jsx --outfile=app.js --format=iife --jsx=transform --target=es2017 && esbuild src/admin.jsx --outfile=admin.js --format=iife --jsx=transform --target=es2017",
+    "build:watch": "npm run build -- --watch",
+    "start": "python3 -m http.server 8000 --bind 0.0.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.24.0"
+  }
+}
