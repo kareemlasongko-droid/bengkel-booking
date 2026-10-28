@@ -51,8 +51,8 @@
   function StatCard({ label, value, sub }) {
     return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 140px", minWidth: 130, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 14, padding: "14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 26, fontWeight: 800, marginTop: 2 } }, value), sub ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, marginTop: 2 } }, sub) : null);
   }
-  function CarCheck({ on }) {
-    return /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, flex: "none", boxSizing: "border-box", borderRadius: 8, border: "2px solid " + (on ? INK : MUTED), background: on ? INK : "#FFFFFF", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, on ? /* @__PURE__ */ React.createElement(CheckIcon, { size: 16 }) : null);
+  function CarCheck({ on, accent }) {
+    return /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { width: 26, height: 26, flex: "none", boxSizing: "border-box", borderRadius: 8, border: "2px solid " + (on ? INK : MUTED), background: on ? accent || INK : "#FFFFFF", color: INK, display: "flex", alignItems: "center", justifyContent: "center" } }, on ? /* @__PURE__ */ React.createElement(CheckIcon, { size: 16 }) : null);
   }
   const inputStyle = {
     width: "100%",
@@ -87,12 +87,15 @@
       setErr("");
       onLogin({ id: found.id, name: found.name, phone: found.phone });
     };
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 440, margin: "0 auto", padding: "32px 20px 48px", display: "flex", flexDirection: "column", gap: 20, minHeight: "100vh", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Portal Mekanik"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Masuk dari HP mekanik masing-masing"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Masuk sebagai mekanik"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Gunakan nomor HP yang terdaftar di bengkel dan PIN 4 angka kamu.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16, padding: 20, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "mech-phone", style: { fontSize: 14, fontWeight: 700 } }, "Nomor HP"), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 440, margin: "0 auto", padding: "32px 20px", paddingBottom: "calc(32px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 20, minHeight: "100dvh", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Portal Mekanik"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Masuk dari HP mekanik masing-masing"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Masuk sebagai mekanik"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Gunakan nomor HP yang terdaftar di bengkel dan PIN 4 angka kamu.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16, padding: 20, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "mech-phone", style: { fontSize: 14, fontWeight: 700 } }, "Nomor HP"), /* @__PURE__ */ React.createElement(
       "input",
       {
         id: "mech-phone",
         type: "tel",
         inputMode: "tel",
+        autoComplete: "tel",
+        enterKeyHint: "next",
+        autoFocus: true,
         placeholder: "08xx xxxx xxxx",
         value: phone,
         onChange: (e) => {
@@ -110,6 +113,8 @@
         id: "mech-pin",
         type: "password",
         inputMode: "numeric",
+        autoComplete: "current-password",
+        enterKeyHint: "done",
         placeholder: "\u2022\u2022\u2022\u2022",
         value: pin,
         onChange: (e) => {
@@ -194,9 +199,9 @@
           type: "button",
           onClick: () => canToggle && run(setCarDone(b.id, i, !c.done, ACTOR + ":" + me), c.done ? c.plate + " dibuka lagi." : c.plate + " ditandai selesai."),
           disabled: !canToggle,
-          style: { display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: BG, borderRadius: 10, padding: "8px 12px", border: mine ? "2px solid " + accent : "2px solid transparent", cursor: canToggle ? "pointer" : "default", font: "inherit", color: INK }
+          style: { display: "flex", alignItems: "center", gap: 12, width: "100%", minHeight: 60, boxSizing: "border-box", textAlign: "left", background: BG, borderRadius: 12, padding: "10px 12px", border: mine ? "2px solid " + accent : "2px solid transparent", cursor: canToggle ? "pointer" : "default", font: "inherit", color: INK }
         },
-        /* @__PURE__ */ React.createElement(CarCheck, { on: c.done }),
+        /* @__PURE__ */ React.createElement(CarCheck, { on: c.done, accent }),
         /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800, textDecoration: c.done ? "line-through" : "none", color: c.done ? GRAY : INK } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, " \xB7 ", c.model)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, c.svc, " \xB7 ", durText(c.svc), " \xB7 ", c.mech ? c.mech : "belum ada mekanik")),
         canToggle ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: GRAY, whiteSpace: "nowrap" } }, c.done ? "selesai" : "tandai selesai") : null
       );
@@ -212,22 +217,22 @@
           setCode(e.target.value.replace(/\D/g, "").slice(0, 4));
           setErr("");
         },
-        style: { width: 110, height: 44, boxSizing: "border-box", textAlign: "center", letterSpacing: 6, fontSize: 18, fontWeight: 700, border: "1.5px solid " + MUTED, borderRadius: 10, background: "#FFFFFF", color: INK }
+        style: { width: 120, minHeight: 48, boxSizing: "border-box", textAlign: "center", letterSpacing: 6, fontSize: 20, fontWeight: 700, border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: INK }
       }
     ), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick: verify,
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { minHeight: 48, padding: "0 18px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: "pointer" }
       },
       "Verifikasi kedatangan"
-    ))) : null, err ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: "8px 12px" } }, err) : null, msg ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: "8px 12px" } }, msg) : null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } }, openCars > 0 && b.status !== "done" ? /* @__PURE__ */ React.createElement(
+    ))) : null, err ? /* @__PURE__ */ React.createElement("div", { role: "alert", style: { fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: "10px 14px" } }, err) : null, msg ? /* @__PURE__ */ React.createElement("div", { role: "status", "aria-live": "polite", style: { fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: "10px 14px" } }, msg) : null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } }, openCars > 0 && b.status !== "done" ? /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick: claim,
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { minHeight: 48, padding: "0 18px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: "pointer", flex: "1 1 auto" }
       },
       "Ambil ",
       openCars,
@@ -237,7 +242,7 @@
       {
         type: "button",
         onClick: () => run(updateBookingStatus(b.id, "in_progress", ACTOR + ":" + me), "Pekerjaan dimulai."),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: INK, color: "#FFFFFF", fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { minHeight: 48, padding: "0 18px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: "pointer", flex: "1 1 auto" }
       },
       "Mulai dikerjakan"
     ) : null, b.status === "in_progress" && myCars > 0 ? /* @__PURE__ */ React.createElement(
@@ -245,7 +250,7 @@
       {
         type: "button",
         onClick: finish,
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer", opacity: allDone ? 1 : 0.8 }
+        style: { minHeight: 48, padding: "0 18px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: "pointer", opacity: allDone ? 1 : 0.85, flex: "1 1 auto" }
       },
       "Selesai & serahkan"
     ) : null, b.status === "done" ? /* @__PURE__ */ React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: GREEN } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 16 }), " Selesai ", b.updatedAt ? fmtDateID(b.updatedAt) : "") : null, b.audit && b.audit.length > 0 ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED, marginLeft: "auto" } }, b.audit.length, " perubahan tercatat") : null));
@@ -285,9 +290,9 @@
       { id: "done", label: "Selesai (" + inScope.filter((b) => b.status === "done").length + ")" }
     ];
     const pill = (on) => ({
-      height: 40,
+      minHeight: 44,
       padding: "0 14px",
-      borderRadius: 20,
+      borderRadius: 22,
       border: "2px solid " + (on ? INK : LINE),
       background: on ? accent : "#FFFFFF",
       color: INK,
@@ -295,12 +300,12 @@
       fontWeight: 700,
       cursor: "pointer"
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 880, margin: "0 auto", padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "Halo, ", session.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "[Nama Bengkel] \xB7 ", session.phone)), /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "Panel admin"), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 880, margin: "0 auto", padding: "24px 20px", paddingBottom: "calc(48px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "Halo, ", session.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "[Nama Bengkel] \xB7 ", session.phone)), /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "Panel admin"), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick: onLogout,
-        style: { height: 40, padding: "0 14px", borderRadius: 20, border: "2px solid " + LINE, background: "#FFFFFF", color: INK, fontSize: 13, fontWeight: 700, cursor: "pointer" }
+        style: { minHeight: 44, padding: "0 16px", borderRadius: 22, border: "2px solid " + LINE, background: "#FFFFFF", color: INK, fontSize: 13, fontWeight: 700, cursor: "pointer" }
       },
       "Keluar"
     )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Pekerjaan"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {

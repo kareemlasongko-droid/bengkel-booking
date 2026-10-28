@@ -84,9 +84,9 @@ function StatCard({ label, value, sub }) {
 }
 
 /* Kotak centang mobil — sama seperti BoxCheck di design */
-function CarCheck({ on }) {
+function CarCheck({ on, accent }) {
   return (
-    <span style={{ width: 26, height: 26, flex: 'none', boxSizing: 'border-box', borderRadius: 8, border: '2px solid ' + (on ? INK : MUTED), background: on ? INK : '#FFFFFF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <span aria-hidden="true" style={{ width: 26, height: 26, flex: 'none', boxSizing: 'border-box', borderRadius: 8, border: '2px solid ' + (on ? INK : MUTED), background: on ? (accent || INK) : '#FFFFFF', color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {on ? <CheckIcon size={16} /> : null}
     </span>
   );
@@ -127,8 +127,8 @@ function Login({ onLogin }) {
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
-      <div style={{ maxWidth: 440, margin: '0 auto', padding: '32px 20px 48px', display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100vh', boxSizing: 'border-box' }}>
+    <div style={{ minHeight: '100dvh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 440, margin: '0 auto', padding: '32px 20px', paddingBottom: 'calc(32px + env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100dvh', boxSizing: 'border-box' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
@@ -148,7 +148,7 @@ function Login({ onLogin }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16, padding: 20, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label htmlFor="mech-phone" style={{ fontSize: 14, fontWeight: 700 }}>Nomor HP</label>
-            <input id="mech-phone" type="tel" inputMode="tel" placeholder="08xx xxxx xxxx" value={phone}
+            <input id="mech-phone" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" autoFocus placeholder="08xx xxxx xxxx" value={phone}
               onChange={(e) => { setPhone(e.target.value); setErr(''); }}
               onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
               style={inputStyle} />
@@ -157,7 +157,7 @@ function Login({ onLogin }) {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <label htmlFor="mech-pin" style={{ fontSize: 14, fontWeight: 700 }}>PIN</label>
-            <input id="mech-pin" type="password" inputMode="numeric" placeholder="••••" value={pin}
+            <input id="mech-pin" type="password" inputMode="numeric" autoComplete="current-password" enterKeyHint="done" placeholder="••••" value={pin}
               onChange={(e) => { setPin(e.target.value.replace(/\D/g, '').slice(0, 4)); setErr(''); }}
               onKeyDown={(e) => { if (e.key === 'Enter') submit(); }}
               style={Object.assign({}, inputStyle, { fontSize: 24, fontWeight: 700, letterSpacing: 10, textAlign: 'center' })} />
@@ -290,8 +290,8 @@ function JobCard({ b, accent, me, onChanged }) {
           return (
             <button key={c.plate + i} type="button" onClick={() => canToggle && run(setCarDone(b.id, i, !c.done, ACTOR + ':' + me), c.done ? c.plate + ' dibuka lagi.' : c.plate + ' ditandai selesai.')}
               disabled={!canToggle}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', background: BG, borderRadius: 10, padding: '8px 12px', border: mine ? '2px solid ' + accent : '2px solid transparent', cursor: canToggle ? 'pointer' : 'default', font: 'inherit', color: INK }}>
-              <CarCheck on={c.done} />
+              style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 60, boxSizing: 'border-box', textAlign: 'left', background: BG, borderRadius: 12, padding: '10px 12px', border: mine ? '2px solid ' + accent : '2px solid transparent', cursor: canToggle ? 'pointer' : 'default', font: 'inherit', color: INK }}>
+              <CarCheck on={c.done} accent={accent} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div>
                   <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
@@ -330,36 +330,36 @@ function JobCard({ b, accent, me, onChanged }) {
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <input type="text" inputMode="numeric" maxLength={4} placeholder="0000" value={code}
               onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 4)); setErr(''); }}
-              style={{ width: 110, height: 44, boxSizing: 'border-box', textAlign: 'center', letterSpacing: 6, fontSize: 18, fontWeight: 700, border: '1.5px solid ' + MUTED, borderRadius: 10, background: '#FFFFFF', color: INK }} />
+              style={{ width: 120, minHeight: 48, boxSizing: 'border-box', textAlign: 'center', letterSpacing: 6, fontSize: 20, fontWeight: 700, border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF', color: INK }} />
             <button type="button" onClick={verify}
-              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ minHeight: 48, padding: '0 18px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>
               Verifikasi kedatangan
             </button>
           </div>
         </div>
       ) : null}
 
-      {err ? <div style={{ fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: '8px 12px' }}>{err}</div> : null}
-      {msg ? <div style={{ fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: '8px 12px' }}>{msg}</div> : null}
+      {err ? <div role="alert" style={{ fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: '10px 14px' }}>{err}</div> : null}
+      {msg ? <div role="status" aria-live="polite" style={{ fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: '10px 14px' }}>{msg}</div> : null}
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {openCars > 0 && b.status !== 'done' ? (
           <button type="button" onClick={claim}
-            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            style={{ minHeight: 48, padding: '0 18px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: 'pointer', flex: '1 1 auto' }}>
             Ambil {openCars} mobil ini
           </button>
         ) : null}
 
         {b.status === 'arrived' && myCars > 0 ? (
           <button type="button" onClick={() => run(updateBookingStatus(b.id, 'in_progress', ACTOR + ':' + me), 'Pekerjaan dimulai.')}
-            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: INK, color: '#FFFFFF', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            style={{ minHeight: 48, padding: '0 18px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: 'pointer', flex: '1 1 auto' }}>
             Mulai dikerjakan
           </button>
         ) : null}
 
         {b.status === 'in_progress' && myCars > 0 ? (
           <button type="button" onClick={finish}
-            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: allDone ? 1 : 0.8 }}>
+            style={{ minHeight: 48, padding: '0 18px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: 'pointer', opacity: allDone ? 1 : 0.85, flex: '1 1 auto' }}>
             Selesai & serahkan
           </button>
         ) : null}
@@ -427,15 +427,15 @@ function Dashboard({ session, onLogout }) {
   ];
 
   const pill = (on) => ({
-    height: 40, padding: '0 14px', borderRadius: 20,
+    minHeight: 44, padding: '0 14px', borderRadius: 22,
     border: '2px solid ' + (on ? INK : LINE),
     background: on ? accent : '#FFFFFF', color: INK,
     fontSize: 13, fontWeight: 700, cursor: 'pointer'
   });
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
-      <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 20px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ minHeight: '100dvh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 20px', paddingBottom: 'calc(48px + env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
@@ -447,7 +447,7 @@ function Dashboard({ session, onLogout }) {
           </div>
           <a href="admin.html" style={{ fontSize: 13, fontWeight: 800, color: INK, textDecoration: 'none' }}>Panel admin</a>
           <button type="button" onClick={onLogout}
-            style={{ height: 40, padding: '0 14px', borderRadius: 20, border: '2px solid ' + LINE, background: '#FFFFFF', color: INK, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ minHeight: 44, padding: '0 16px', borderRadius: 22, border: '2px solid ' + LINE, background: '#FFFFFF', color: INK, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Keluar
           </button>
         </div>

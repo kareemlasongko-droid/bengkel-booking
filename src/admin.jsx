@@ -67,31 +67,31 @@ function Notice({ kind, children }) {
       ? { bg: TONE.green.bg, fg: TONE.green.fg }
       : { bg: '#FFFFFF', fg: GRAY };
   return (
-    <div style={{ fontSize: 13, lineHeight: 1.5, color: palette.fg, background: palette.bg, border: kind === 'info' ? '1px dashed ' + MUTED : 'none', borderRadius: 10, padding: '8px 12px' }}>
+    <div role="status" aria-live="polite" style={{ fontSize: 13, lineHeight: 1.5, color: palette.fg, background: palette.bg, border: kind === 'info' ? '1px dashed ' + MUTED : 'none', borderRadius: 10, padding: '10px 14px' }}>
       {children}
     </div>
   );
 }
 
 const inputBase = {
-  height: 44, boxSizing: 'border-box', padding: '0 12px',
-  border: '1.5px solid ' + MUTED, borderRadius: 10, background: '#FFFFFF',
-  color: INK, fontSize: 14, font: 'inherit'
+  minHeight: 48, boxSizing: 'border-box', padding: '0 14px',
+  border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF',
+  color: INK, fontSize: 16, fontFamily: 'inherit'
 };
 
 const btnPrimary = (accent) => ({
-  height: 44, padding: '0 16px', borderRadius: 10, border: 'none',
-  background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer'
+  minHeight: 48, padding: '0 18px', borderRadius: 12, border: 'none',
+  background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: 'pointer'
 });
 const btnGhost = {
-  height: 44, padding: '0 14px', borderRadius: 10,
+  minHeight: 48, padding: '0 16px', borderRadius: 12,
   border: '1.5px solid ' + MUTED, background: '#FFFFFF',
-  color: INK, fontSize: 14, fontWeight: 700, cursor: 'pointer'
+  color: INK, fontSize: 15, fontWeight: 700, cursor: 'pointer'
 };
 const btnDanger = {
-  height: 44, padding: '0 14px', borderRadius: 10,
+  minHeight: 48, padding: '0 16px', borderRadius: 12,
   border: '1.5px solid ' + LINE, background: '#FFFFFF',
-  color: RED, fontSize: 13, fontWeight: 700, cursor: 'pointer'
+  color: RED, fontSize: 14, fontWeight: 700, cursor: 'pointer'
 };
 
 /* ---------- pilih mekanik per mobil ---------- */
@@ -100,7 +100,7 @@ function MechSelect({ car, b, accent, onChange }) {
   return (
     <select value={car.mech || ''} onChange={(e) => onChange(e.target.value)} disabled={b.status === 'done' || b.status === 'cancelled'}
       aria-label={'Mekanik untuk ' + car.plate}
-      style={Object.assign({}, inputBase, { height: 36, fontSize: 13, width: '100%', maxWidth: 190, borderColor: car.mech ? LINE : accent })}>
+      style={Object.assign({}, inputBase, { minHeight: 44, fontSize: 15, width: '100%', maxWidth: 240, borderColor: car.mech ? LINE : accent })}>
       <option value="">— belum ditugaskan —</option>
       {MECHANICS.map((m) => (
         <option key={m.id} value={m.name} disabled={busyElsewhere(m.name)}>
@@ -212,7 +212,7 @@ function BookingCard({ b, accent, onChange }) {
                 onChange={(name) => run(assignMechanic(b.id, i, name, ACTOR), name ? 'Mekanik ' + c.plate + ': ' + name : 'Penugasan ' + c.plate + ' dilepas.')} />
               <button type="button" onClick={() => run(setCarDone(b.id, i, !c.done, ACTOR), c.done ? 'Progres ' + c.plate + ' dibatalkan.' : c.plate + ' ditandai selesai.')}
                 disabled={b.status === 'done' || b.status === 'cancelled'}
-                style={{ height: 36, padding: '0 12px', borderRadius: 10, border: '1.5px solid ' + (c.done ? GREEN : LINE), background: c.done ? TONE.green.bg : '#FFFFFF', color: c.done ? TONE.green.fg : INK, fontSize: 12, fontWeight: 800, cursor: 'pointer' }}>
+                style={{ minHeight: 44, padding: '0 14px', borderRadius: 10, border: '1.5px solid ' + (c.done ? GREEN : LINE), background: c.done ? TONE.green.bg : '#FFFFFF', color: c.done ? TONE.green.fg : INK, fontSize: 13, fontWeight: 800, cursor: 'pointer' }}>
                 {c.done ? 'Selesai ✓' : 'Tandai selesai'}
               </button>
             </div>
@@ -241,7 +241,7 @@ function BookingCard({ b, accent, onChange }) {
               style={Object.assign({}, inputBase, { width: 110, textAlign: 'center', letterSpacing: 6, fontSize: 18, fontWeight: 700 })} />
             <button type="button" onClick={verify} style={btnPrimary(accent)}>Verifikasi & catat tiba</button>
             <button type="button" onClick={() => { setCodeInput(b.checkinCode); setMsg('Kode demo ditampilkan (bantuan prototipe).'); }}
-              style={{ height: 44, padding: 0, border: 'none', background: 'transparent', color: MUTED, fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>
+              style={{ minHeight: 44, padding: '0 8px', border: 'none', background: 'transparent', color: MUTED, fontSize: 13, fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}>
               lihat kode (demo)
             </button>
           </div>
@@ -296,7 +296,7 @@ function BookingCard({ b, accent, onChange }) {
       {b.audit.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <button type="button" onClick={() => setShowAudit(!showAudit)}
-            style={{ alignSelf: 'flex-start', padding: 0, border: 'none', background: 'transparent', color: GRAY, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ alignSelf: 'flex-start', minHeight: 44, padding: '0 4px', border: 'none', background: 'transparent', color: GRAY, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             {showAudit ? 'Sembunyikan riwayat' : 'Riwayat perubahan (' + b.audit.length + ')'}
           </button>
           {showAudit ? b.audit.slice(0, 12).map((a, i) => (
@@ -475,17 +475,17 @@ function Admin() {
   ];
 
   const pill = (on) => ({
-    height: 38, padding: '0 12px', borderRadius: 19,
+    minHeight: 44, padding: '0 14px', borderRadius: 22,
     border: '2px solid ' + (on ? INK : LINE),
     background: on ? accent : '#FFFFFF', color: INK,
-    fontSize: 12, fontWeight: 700, cursor: 'pointer'
+    fontSize: 13, fontWeight: 700, cursor: 'pointer'
   });
 
   const hasSample = bookings.some((b) => b.sample);
 
   return (
-    <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
-      <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 20px 48px', display: 'flex', flexDirection: 'column', gap: 18 }}>
+    <div style={{ minHeight: '100dvh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
+      <div style={{ maxWidth: 920, margin: '0 auto', padding: '24px 20px', paddingBottom: 'calc(48px + env(safe-area-inset-bottom))', display: 'flex', flexDirection: 'column', gap: 18 }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>

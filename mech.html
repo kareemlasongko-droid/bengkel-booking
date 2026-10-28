@@ -2,13 +2,27 @@
 <html lang="id">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Portal Mekanik — [Nama Bengkel]</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F3F5">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap">
 <style>
-body{margin:0}
-button:focus-visible{outline:3px solid #12161C;outline-offset:2px}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:#F2F3F5}
+*,*::before,*::after{box-sizing:border-box}
+button,input,select,textarea{font:inherit;touch-action:manipulation}
+a,button{-webkit-tap-highlight-color:transparent}
+/* input >= 16px agar iOS tidak auto-zoom saat fokus */
+input,select,textarea{font-size:16px}
+button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,a:focus-visible{outline:3px solid #12161C;outline-offset:2px}
+/* area aman iPhone (home indicator) */
+.safe-bottom{padding-bottom:env(safe-area-inset-bottom)}
+@media (prefers-reduced-motion: reduce){
+  *{animation-duration:.001ms !important;animation-iteration-count:1 !important;transition-duration:.001ms !important;scroll-behavior:auto !important}
+}
 </style>
+<title>Portal Mekanik — [Nama Bengkel]</title>
 </head>
 <body>
 <div id="root"></div>
