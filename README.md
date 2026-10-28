@@ -11,7 +11,7 @@ melihat dan mengubah statusnya, mekanik mengerjakan dan menandai selesai.
 |---|---|
 | `index.html` | Alur booking pelanggan (mobile-first, 440px): 5 langkah — Nomor WhatsApp → OTP → Mobil → Servis → Jadwal → Konfirmasi → Berhasil |
 | `admin.html` | Panel admin: statistik, filter status, daftar booking, alur status (Tiba → Dikerjakan → Selesai), batalkan/hapus |
-| `mech.html` | Portal mekanik: pilih mekanik, daftar tugas, progres per mobil, mulai & selesaikan pekerjaan |
+| `mech.html` | Portal mekanik: **masuk per mekanik** (nomor HP + PIN), hanya melihat tugasnya sendiri, ambil tugas yang belum ditugaskan, progres per mobil, mulai & selesaikan pekerjaan, tombol keluar |
 
 ## Cara menjalankan
 
@@ -135,16 +135,25 @@ Semua perilaku design dipertahankan:
   Status booking dapat digerakkan: Konfirmasi → Tiba → Dikerjakan → Selesai
   (atau Dibatalkan). Ada data contoh ("Muat data contoh").
 - **Portal mekanik** (`mech.html`) — sisi pengerjaan di bengkel, memakai
-  bahasa desain yang sama (kartu, chip status, statistik, tab filter):
-  pilih mekanik (atau *Semua mekanik* / *Belum ditugaskan*), lihat tugas
-  yang ditugaskan beserta durasi servisnya, **tandai selesai per mobil**
-  (tersimpan di `doneCars`), *Catat kedatangan* → *Mulai dikerjakan* →
+  bahasa desain yang sama (kartu, chip status, statistik, tab filter).
+  Setiap mekanik punya HP sendiri, jadi portalnya **dibuka per mekanik**:
+  masuk dengan **nomor HP terdaftar + PIN 4 angka** (`MECH_ACCOUNTS` di
+  `src/mech.jsx`). Sesi disimpan di HP itu (`bengkel.mech.session.v1`),
+  jadi tidak perlu mengetik ulang setiap membuka portal, dan tombol
+  **Keluar** tersedia untuk berganti mekanik.
+  Setelah masuk, mekanik **hanya melihat pekerjaannya sendiri**; tersedia
+  tab *Belum ditugaskan* untuk mengambil booking yang mekaniknya masih
+  “Otomatis” (*Ambil tugas ini* → mekaniknya menjadi dia). Tiap tugas
+  menampilkan jadwal, pelanggan, dan durasi servis; mobil bisa
+  **ditandai selesai satu per satu** (tersimpan di `doneCars` dengan
+  progress bar), lalu *Catat kedatangan* → *Mulai dikerjakan* →
   *Selesai & serahkan*. Booking yang dibatalkan tidak ditampilkan.
   Akses sementara: tautan *Portal mekanik →* di bawah tautan admin pada
   halaman pelanggan.
 - **Persistensi**: booking tersimpan di `localStorage` (kunci
   `bengkel.bookings.v1`), jadi pelanggan dan admin di browser yang sama
-  saling terhubung tanpa backend.
+  saling terhubung tanpa backend. Sesi portal mekanik memakai kunci
+  terpisah `bengkel.mech.session.v1` dan hanya menyimpan id mekanik.
 - **Pilihan warna aksen** (titik warna di bawah CTA) — sesuai prop `accent`
   di design dengan 4 opsi warna.
 - Tautan *Panel admin bengkel →* di bagian bawah halaman pelanggan.
@@ -181,7 +190,7 @@ bengkel-booking/
 | Yang mau diubah | Lokasi |
 |---|---|
 | Nama bengkel | Cari-ganti `[Nama Bengkel]` di `src/app.jsx`, `src/admin.jsx` & `src/mech.jsx`, lalu build |
-| Daftar mekanik di portal mekanik | `MECH_LIST` di `src/mech.jsx` (samakan dengan `MECHS` di `src/app.jsx`) |
+| Akun mekanik (nama, nomor HP, PIN) | `MECH_ACCOUNTS` di `src/mech.jsx` — `name` harus sama dengan `MECHS` di `src/app.jsx` |
 | Durasi per servis di portal mekanik | `SVC_MINS` di `src/mech.jsx` (samakan dengan `SERVICES` di `src/app.jsx`) |
 | Daftar servis + durasi | `SERVICES` di `src/app.jsx` |
 | Jam & kuota per jam | `SLOTS` di `src/app.jsx` |
