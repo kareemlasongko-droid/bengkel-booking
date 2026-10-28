@@ -32,49 +32,49 @@
   }
   function Notice({ kind, children }) {
     const palette = kind === "error" ? { bg: TONE.red.bg, fg: RED } : kind === "ok" ? { bg: TONE.green.bg, fg: TONE.green.fg } : { bg: "#FFFFFF", fg: GRAY };
-    return /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: palette.fg, background: palette.bg, border: kind === "info" ? "1px dashed " + MUTED : "none", borderRadius: 10, padding: "8px 12px" } }, children);
+    return /* @__PURE__ */ React.createElement("div", { role: "status", "aria-live": "polite", style: { fontSize: 13, lineHeight: 1.5, color: palette.fg, background: palette.bg, border: kind === "info" ? "1px dashed " + MUTED : "none", borderRadius: 10, padding: "10px 14px" } }, children);
   }
   const inputBase = {
-    height: 44,
+    minHeight: 48,
     boxSizing: "border-box",
-    padding: "0 12px",
+    padding: "0 14px",
     border: "1.5px solid " + MUTED,
-    borderRadius: 10,
+    borderRadius: 12,
     background: "#FFFFFF",
     color: INK,
-    fontSize: 14,
-    font: "inherit"
+    fontSize: 16,
+    fontFamily: "inherit"
   };
   const btnPrimary = (accent) => ({
-    height: 44,
-    padding: "0 16px",
-    borderRadius: 10,
+    minHeight: 48,
+    padding: "0 18px",
+    borderRadius: 12,
     border: "none",
     background: accent,
     color: INK,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 800,
     cursor: "pointer"
   });
   const btnGhost = {
-    height: 44,
-    padding: "0 14px",
-    borderRadius: 10,
+    minHeight: 48,
+    padding: "0 16px",
+    borderRadius: 12,
     border: "1.5px solid " + MUTED,
     background: "#FFFFFF",
     color: INK,
-    fontSize: 14,
+    fontSize: 15,
     fontWeight: 700,
     cursor: "pointer"
   };
   const btnDanger = {
-    height: 44,
-    padding: "0 14px",
-    borderRadius: 10,
+    minHeight: 48,
+    padding: "0 16px",
+    borderRadius: 12,
     border: "1.5px solid " + LINE,
     background: "#FFFFFF",
     color: RED,
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: 700,
     cursor: "pointer"
   };
@@ -87,7 +87,7 @@
         onChange: (e) => onChange(e.target.value),
         disabled: b.status === "done" || b.status === "cancelled",
         "aria-label": "Mekanik untuk " + car.plate,
-        style: Object.assign({}, inputBase, { height: 36, fontSize: 13, width: "100%", maxWidth: 190, borderColor: car.mech ? LINE : accent })
+        style: Object.assign({}, inputBase, { minHeight: 44, fontSize: 15, width: "100%", maxWidth: 240, borderColor: car.mech ? LINE : accent })
       },
       /* @__PURE__ */ React.createElement("option", { value: "" }, "\u2014 belum ditugaskan \u2014"),
       MECHANICS.map((m) => /* @__PURE__ */ React.createElement("option", { key: m.id, value: m.name, disabled: busyElsewhere(m.name) }, m.name, busyElsewhere(m.name) ? " (sibuk di jam ini)" : ""))
@@ -159,7 +159,7 @@
         type: "button",
         onClick: () => run(setCarDone(b.id, i, !c.done, ACTOR), c.done ? "Progres " + c.plate + " dibatalkan." : c.plate + " ditandai selesai."),
         disabled: b.status === "done" || b.status === "cancelled",
-        style: { height: 36, padding: "0 12px", borderRadius: 10, border: "1.5px solid " + (c.done ? GREEN : LINE), background: c.done ? TONE.green.bg : "#FFFFFF", color: c.done ? TONE.green.fg : INK, fontSize: 12, fontWeight: 800, cursor: "pointer" }
+        style: { minHeight: 44, padding: "0 14px", borderRadius: 10, border: "1.5px solid " + (c.done ? GREEN : LINE), background: c.done ? TONE.green.bg : "#FFFFFF", color: c.done ? TONE.green.fg : INK, fontSize: 13, fontWeight: 800, cursor: "pointer" }
       },
       c.done ? "Selesai \u2713" : "Tandai selesai"
     ))))), b.note ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY, background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 10, padding: "8px 12px" } }, "Catatan: ", b.note) : null, (b.status === "cancelled" || b.status === "no_show") && b.closedReason ? /* @__PURE__ */ React.createElement(Notice, null, "Alasan: ", b.closedReason) : null, b.status === "confirmed" ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, padding: 12, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, "Verifikasi kedatangan (kode check-in dari pelanggan)"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement(
@@ -187,7 +187,7 @@
           setCodeInput(b.checkinCode);
           setMsg("Kode demo ditampilkan (bantuan prototipe).");
         },
-        style: { height: 44, padding: 0, border: "none", background: "transparent", color: MUTED, fontSize: 12, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }
+        style: { minHeight: 44, padding: "0 8px", border: "none", background: "transparent", color: MUTED, fontSize: 13, fontWeight: 700, cursor: "pointer", textDecoration: "underline" }
       },
       "lihat kode (demo)"
     ))) : null, editable ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, "Ubah jadwal"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement("select", { value: resDay, onChange: (e) => {
@@ -209,7 +209,7 @@
       {
         type: "button",
         onClick: () => setShowAudit(!showAudit),
-        style: { alignSelf: "flex-start", padding: 0, border: "none", background: "transparent", color: GRAY, fontSize: 12, fontWeight: 700, cursor: "pointer" }
+        style: { alignSelf: "flex-start", minHeight: 44, padding: "0 4px", border: "none", background: "transparent", color: GRAY, fontSize: 12, fontWeight: 700, cursor: "pointer" }
       },
       showAudit ? "Sembunyikan riwayat" : "Riwayat perubahan (" + b.audit.length + ")"
     ), showAudit ? b.audit.slice(0, 12).map((a, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { fontSize: 12, color: GRAY, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("b", { style: { color: INK } }, a.action), " \xB7 ", fmtDateID(a.at), " \xB7 ", a.actor, a.note ? " \xB7 " + a.note : "")) : null) : null);
@@ -360,18 +360,18 @@
       { id: "archived", label: "Arsip (" + archived.length + ")" }
     ];
     const pill = (on) => ({
-      height: 38,
-      padding: "0 12px",
-      borderRadius: 19,
+      minHeight: 44,
+      padding: "0 14px",
+      borderRadius: 22,
       border: "2px solid " + (on ? INK : LINE),
       background: on ? accent : "#FFFFFF",
       color: INK,
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: 700,
       cursor: "pointer"
     });
     const hasSample = bookings.some((b) => b.sample);
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 920, margin: "0 auto", padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Panel Admin"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Operasional harian: check-in, mekanik, jadwal")), /* @__PURE__ */ React.createElement("a", { href: "mech.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "Portal mekanik"), /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "\u2190 Situs pelanggan")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Servis hari ini", value: stats.today, sub: dayInfo(today) ? dayInfo(today).fullLong : today, accent }), /* @__PURE__ */ React.createElement(StatCard, { label: "Menunggu tiba", value: stats.waiting }), /* @__PURE__ */ React.createElement(StatCard, { label: "Sedang dikerjakan", value: stats.working }), /* @__PURE__ */ React.createElement(StatCard, { label: "Mekanik belum lengkap", value: stats.unassigned })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement(WalkInForm, { accent, onCreated: (text) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 920, margin: "0 auto", padding: "24px 20px", paddingBottom: "calc(48px + env(safe-area-inset-bottom))", display: "flex", flexDirection: "column", gap: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Panel Admin"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Operasional harian: check-in, mekanik, jadwal")), /* @__PURE__ */ React.createElement("a", { href: "mech.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "Portal mekanik"), /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "\u2190 Situs pelanggan")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Servis hari ini", value: stats.today, sub: dayInfo(today) ? dayInfo(today).fullLong : today, accent }), /* @__PURE__ */ React.createElement(StatCard, { label: "Menunggu tiba", value: stats.waiting }), /* @__PURE__ */ React.createElement(StatCard, { label: "Sedang dikerjakan", value: stats.working }), /* @__PURE__ */ React.createElement(StatCard, { label: "Mekanik belum lengkap", value: stats.unassigned })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 10, flexWrap: "wrap", alignItems: "center" } }, /* @__PURE__ */ React.createElement(WalkInForm, { accent, onCreated: (text) => {
       setNotice(text);
       refresh();
     } }), hasSample ? /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {

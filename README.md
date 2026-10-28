@@ -270,7 +270,7 @@ dan database.
 
 ```bash
 npm install          # sekali saja (mengunduh esbuild)
-npm run build        # menulis ulang app.js & admin.js
+npm run build        # menulis ulang app.js, admin.js & mech.js
 npm run build:site   # (opsional) menyegarkan public/ seperti saat deploy
 npm run vercel-build # keduanya sekaligus — inilah yang dijalankan Vercel
 ```
@@ -288,3 +288,37 @@ saat menguji tiga portal berdampingan.
 
 Hasil build sudah disertakan, jadi build ulang hanya perlu jika Anda
 mengedit sumber JSX.
+
+## Uji otomatis
+
+```bash
+npm run build   # tes UI memakai bundle hasil build
+npm test        # domain (booking.js) + UI end-to-end 3 portal (jsdom)
+```
+
+- `tests/domain.test.mjs` — 71 cek aturan murni: kuota slot, bentrok mekanik,
+  alur status, check-in, batal/tidak datang, reschedule, whitelist field,
+  arsip, garasi kendaraan, data contoh, pencarian booking pelanggan.
+- `tests/ui.test.mjs` — 74 cek UI di jsdom untuk portal pelanggan, admin, dan
+  mekanik: alur booking 5 langkah, pencegahan kirim ganda, cek status dan
+  pembatalan, check-in admin, penugasan mekanik, walk-in, login mekanik, plus
+  audit ukuran target sentuh (semua tombol ≥ 44 px).
+
+Keduanya berjalan tanpa browser dan tanpa jaringan.
+
+## Penyesuaian untuk HP (2026)
+
+- `viewport-fit=cover` + `padding-bottom: env(safe-area-inset-bottom)` supaya
+  tombol utama tidak tertutup home indicator iPhone.
+- Semua tombol dan kolom input minimal 44–48 px; `input` berukuran 16 px ke
+  atas agar iOS tidak memperbesar halaman saat fokus.
+- Keyboard yang tepat per kolom (`inputMode="tel"`, `numeric`,
+  `autoComplete="one-time-code"`, `enterKeyHint`).
+- Tombol konfirmasi menempel di bawah (sticky) dan mengunci diri saat menyimpan
+  supaya booking tidak terkirim dua kali.
+- Status terpilih memakai warna aksen yang dipilih pelanggan (bukan hitam);
+  semua pasangan warna aksen sudah lolos kontras WCAG AA dengan teks `INK`.
+- `:focus-visible` jelas untuk pengguna keyboard dan `prefers-reduced-motion`
+  dihormati.
+- Tautan panel admin/portal mekanik dan pemilih warna bengkel dilipat di dalam
+  "Akses staf bengkel" agar tidak mengganggu pelanggan.

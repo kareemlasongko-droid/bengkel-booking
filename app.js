@@ -18,7 +18,7 @@
     return a;
   };
   var __spreadProps = (a, b) => __defProps(a, __getOwnPropDescs(b));
-  const { useState, useEffect } = React;
+  const { useState, useEffect, useRef } = React;
   const INK = "#12161C";
   const GRAY = "#5A6270";
   const LINE = "#DDE1E7";
@@ -59,8 +59,8 @@
   const BackIcon = () => /* @__PURE__ */ React.createElement("svg", { width: "20", height: "20", viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M12 4l-6 6 6 6" }));
   const CheckIcon = ({ size = 16, width = 2.4 }) => /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 16 16", fill: "none", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M3 8.5l3.2 3L13 4.5", stroke: "currentColor", strokeWidth: width, strokeLinecap: "round", strokeLinejoin: "round" }));
   const PlusIcon = () => /* @__PURE__ */ React.createElement("svg", { width: "18", height: "18", viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M10 4v12M4 10h12" }));
-  function BoxCheck({ on }) {
-    return /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, flex: "none", boxSizing: "border-box", borderRadius: 8, border: "2px solid " + INK, background: on ? INK : "#FFFFFF", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, on ? /* @__PURE__ */ React.createElement(CheckIcon, null) : null);
+  function BoxCheck({ on, accent }) {
+    return /* @__PURE__ */ React.createElement("span", { "aria-hidden": "true", style: { width: 26, height: 26, flex: "none", boxSizing: "border-box", borderRadius: 8, border: "2px solid " + INK, background: on ? accent || INK : "#FFFFFF", color: INK, display: "flex", alignItems: "center", justifyContent: "center" } }, on ? /* @__PURE__ */ React.createElement(CheckIcon, null) : null);
   }
   function AccentDot({ on, accent, color, onClick }) {
     return /* @__PURE__ */ React.createElement(
@@ -68,9 +68,17 @@
       {
         type: "button",
         "aria-label": "Warna aksen " + color,
+        "aria-pressed": on,
         onClick,
-        style: { width: 18, height: 18, borderRadius: 9, background: color, border: on ? "2px solid " + INK : "2px solid rgba(0,0,0,0.12)", outline: "none", cursor: "pointer", padding: 0 }
-      }
+        style: { width: 44, height: 44, display: "flex", alignItems: "center", justifyContent: "center", border: "none", background: "transparent", cursor: "pointer", padding: 0 }
+      },
+      /* @__PURE__ */ React.createElement(
+        "span",
+        {
+          "aria-hidden": "true",
+          style: { width: 18, height: 18, borderRadius: 9, background: color, border: on ? "2px solid " + INK : "2px solid rgba(0,0,0,0.12)", boxSizing: "border-box" }
+        }
+      )
     );
   }
   function App() {
@@ -79,7 +87,7 @@
       return ACCENTS.indexOf(saved) === -1 ? ACCENTS[0] : saved;
     });
     const [step, setStep] = useState("phone");
-    const [phone, setPhone] = useState("0812 0000 1234");
+    const [phone, setPhone] = useState("");
     const [otp, setOtp] = useState("");
     const [role, setRole] = useState("owner");
     const [ownerPhone, setOwnerPhone] = useState("");
@@ -100,6 +108,8 @@
     const [remindOn, setRemindOn] = useState(true);
     const [promoOn, setPromoOn] = useState(false);
     const [code, setCode] = useState("");
+    const [saving, setSaving] = useState(false);
+    const savingRef = useRef(false);
     const [checkin, setCheckin] = useState("");
     const [savedId, setSavedId] = useState("");
     const [lookCode, setLookCode] = useState("");
@@ -134,8 +144,11 @@
       confirm: true
     }[step] === true;
     const goNext = () => {
-      if (!canNext) return;
+      if (!canNext || saving) return;
       if (step === "confirm") {
+        if (savingRef.current) return;
+        savingRef.current = true;
+        setSaving(true);
         const chosenMech = mechNameOf(mech);
         const dayObj2 = DAYS[day];
         const booking = saveBooking({
@@ -159,6 +172,8 @@
         setCode(booking.id);
         setCheckin(booking.checkinCode);
         setSavedId(booking.id);
+        setSaving(false);
+        savingRef.current = false;
         setStep("done");
         scrollTop();
         return;
@@ -279,23 +294,24 @@
       { id: "driver", label: "Mengantar (supir atau kerabat)" }
     ].map((r) => {
       const on = role === r.id;
-      return __spreadProps(__spreadValues({}, r), { on, bg: on ? INK : "#FFFFFF", fg: on ? "#FFFFFF" : INK, border: on ? INK : MUTED });
+      return __spreadProps(__spreadValues({}, r), { on, bg: on ? accent : "#FFFFFF", fg: INK, border: on ? INK : MUTED });
     });
     const waits = [
       { id: "tunggu", label: "Saya tunggu di bengkel" },
       { id: "tinggal", label: "Saya tinggal" }
     ].map((w) => {
       const on = wait === w.id;
-      return __spreadProps(__spreadValues({}, w), { on, bg: on ? INK : "#FFFFFF", fg: on ? "#FFFFFF" : INK, border: on ? INK : MUTED });
+      return __spreadProps(__spreadValues({}, w), { on, bg: on ? accent : "#FFFFFF", fg: INK, border: on ? INK : MUTED });
     });
     const waitNote = wait === "tunggu" ? "Kamu dapat QR di ruang tunggu untuk memantau progres dan estimasi selesai." : "Tidak perlu menunggu. Kabar dikirim lewat WhatsApp: mulai dikerjakan, persetujuan biaya, dan mobil siap diambil.";
     const days = DAYS.map((d, i) => {
       const on = day === i;
-      return __spreadProps(__spreadValues({}, d), { i, on, bg: on ? INK : "#FFFFFF", fg: on ? "#FFFFFF" : INK, border: on ? INK : MUTED });
+      const hint = i === 0 ? "Hari ini" : i === 1 ? "Besok" : d.dow;
+      return __spreadProps(__spreadValues({}, d), { i, hint, on, bg: on ? accent : "#FFFFFF", fg: INK, border: on ? INK : MUTED });
     });
     const mechList = MECHS.map((m) => {
       const on = mech === m.id;
-      return __spreadProps(__spreadValues({}, m), { on, border: on ? INK : LINE, dotBg: on ? INK : "#FFFFFF" });
+      return __spreadProps(__spreadValues({}, m), { on, border: on ? INK : LINE, dotBg: on ? accent : "#FFFFFF" });
     });
     const slotList = SLOTS.map((sl) => {
       const ok = slotOkFor((DAYS[day] || {}).iso, sl.t, mech, n);
@@ -304,9 +320,9 @@
         ok,
         on,
         sub: !ok ? "Penuh" : on ? "Dipilih" : "Kosong",
-        bg: on ? INK : ok ? "#FFFFFF" : "#EEF0F3",
-        fg: on ? "#FFFFFF" : ok ? INK : GRAY,
-        subFg: on ? "#D6DAE1" : GRAY,
+        bg: on ? accent : ok ? "#FFFFFF" : "#EEF0F3",
+        fg: ok ? INK : GRAY,
+        subFg: on ? "rgba(18,22,28,0.72)" : GRAY,
         border: on ? INK : ok ? MUTED : LINE
       });
     });
@@ -340,12 +356,13 @@
     const showBack = step !== "phone" && step !== "done" && step !== "status";
     const showFooter = step !== "done" && step !== "status";
     const roleLabel = driver ? "Pengantar" : "Pemilik";
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: 844, background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, display: "flex", justifyContent: "center", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 440, minHeight: 844, boxSizing: "border-box", padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, "[Nama Bengkel]"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Booking servis mobil")), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100dvh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, display: "flex", justifyContent: "center", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 440, minHeight: "100dvh", boxSizing: "border-box", padding: "20px 20px 0", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, "[Nama Bengkel]"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Booking servis mobil")), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick: openLookup,
-        style: { height: 36, padding: "0 12px", borderRadius: 18, border: "2px solid " + LINE, background: "#FFFFFF", color: INK, fontSize: 12, fontWeight: 700, cursor: "pointer", flex: "none" }
+        "aria-label": "Cek status booking",
+        style: { minHeight: 44, padding: "0 16px", borderRadius: 22, border: "2px solid " + LINE, background: "#FFFFFF", color: INK, fontSize: 13, fontWeight: 700, cursor: "pointer", flex: "none" }
       },
       "Cek status"
     )), showProgress && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, showBack && /* @__PURE__ */ React.createElement(
@@ -362,23 +379,29 @@
       {
         id: "wa",
         type: "tel",
+        inputMode: "tel",
+        autoComplete: "tel",
+        enterKeyHint: "next",
         placeholder: "08xx xxxx xxxx",
         value: phone,
         onChange: (e) => setPhone(e.target.value),
         style: { width: "100%", height: 56, boxSizing: "border-box", padding: "0 16px", border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: INK, fontSize: 18 }
       }
-    ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Kode verifikasi dikirim lewat WhatsApp. Pelanggan lama langsung dikenali dan mobilnya terisi otomatis.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, ["Pilih mobil, servis, dan jadwal dalam 4 langkah", "Kabar progres dan biaya langsung ke WhatsApp", "Riwayat servis tiap mobil tersimpan rapi"].map((t) => /* @__PURE__ */ React.createElement("div", { key: t, style: { display: "flex", alignItems: "center", gap: 12, fontSize: 15, lineHeight: 1.4 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 24, height: 24, flex: "none", borderRadius: 12, background: accent, display: "flex", alignItems: "center", justifyContent: "center", color: INK } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 14, width: 2.4 })), t)))), step === "otp" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Masukkan kode verifikasi"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Kode 4 angka sudah dikirim ke WhatsApp ", phone, ".")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "otp", style: { fontSize: 14, fontWeight: 700 } }, "Kode verifikasi"), /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Kode verifikasi dikirim lewat WhatsApp. Pelanggan lama langsung dikenali dan mobilnya terisi otomatis.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, ["Pilih mobil, servis, dan jadwal tanpa bikin akun", "Kabar progres dan biaya langsung ke WhatsApp", "Riwayat servis tiap mobil tersimpan rapi"].map((t) => /* @__PURE__ */ React.createElement("div", { key: t, style: { display: "flex", alignItems: "center", gap: 12, fontSize: 15, lineHeight: 1.4 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 24, height: 24, flex: "none", borderRadius: 12, background: accent, display: "flex", alignItems: "center", justifyContent: "center", color: INK } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 14, width: 2.4 })), t)))), step === "otp" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Masukkan kode verifikasi"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Kode 4 angka sudah dikirim ke WhatsApp ", phone, ".")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "otp", style: { fontSize: 14, fontWeight: 700 } }, "Kode verifikasi"), /* @__PURE__ */ React.createElement(
       "input",
       {
         id: "otp",
         type: "tel",
         inputMode: "numeric",
+        autoComplete: "one-time-code",
+        enterKeyHint: "done",
+        autoFocus: true,
         placeholder: "0000",
         value: otp,
         onChange: (e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4)),
         style: { width: "100%", height: 64, boxSizing: "border-box", padding: "0 16px", border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: INK, fontSize: 28, fontWeight: 700, letterSpacing: 12, textAlign: "center" }
       }
-    )), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Catatan prototipe: ketik 4 angka apa saja, misalnya 1234.")), step === "cars" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Mobil mana yang diservis?"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Nomor dikenali. Pilih satu atau lebih mobil yang pernah kamu servis di sini.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, cars.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Belum ada mobil tersimpan untuk nomor ini. Tambahkan mobil dulu \u2014 data tersimpan per nomor WhatsApp."), cars.map((c) => {
+    )), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Mode demo: kode belum benar-benar dikirim lewat WhatsApp. Masukkan 4 angka apa saja, misalnya 1234.")), step === "cars" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Mobil mana yang diservis?"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Nomor dikenali. Pilih satu atau lebih mobil yang pernah kamu servis di sini.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, cars.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Belum ada mobil tersimpan untuk nomor ini. Tambahkan mobil dulu \u2014 data tersimpan per nomor WhatsApp."), cars.map((c) => {
       const on = !!selected[c.id];
       return /* @__PURE__ */ React.createElement(
         "button",
@@ -389,7 +412,7 @@
           onClick: () => toggleCar(c.id),
           style: { width: "100%", minHeight: 72, boxSizing: "border-box", padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, textAlign: "left", background: "#FFFFFF", color: INK, border: "2px solid " + (on ? INK : LINE), borderRadius: 14, cursor: "pointer" }
         },
-        /* @__PURE__ */ React.createElement(BoxCheck, { on }),
+        /* @__PURE__ */ React.createElement(BoxCheck, { on, accent }),
         /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 3, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: GRAY } }, c.model), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, c.last))
       );
     }), /* @__PURE__ */ React.createElement(
@@ -461,7 +484,7 @@
             type: "button",
             "aria-pressed": on,
             onClick: () => setSvc((prev) => __spreadProps(__spreadValues({}, prev), { [c.id]: sv.id })),
-            style: { minHeight: 44, boxSizing: "border-box", padding: "0 14px", display: "flex", alignItems: "center", gap: 6, background: on ? INK : "#FFFFFF", color: on ? "#FFFFFF" : INK, border: "2px solid " + (on ? INK : MUTED), borderRadius: 22, fontSize: 14, fontWeight: 700, cursor: "pointer" }
+            style: { minHeight: 44, boxSizing: "border-box", padding: "0 14px", display: "flex", alignItems: "center", gap: 6, background: on ? accent : "#FFFFFF", color: INK, border: "2px solid " + (on ? INK : MUTED), borderRadius: 22, fontSize: 14, fontWeight: 700, cursor: "pointer" }
           },
           on ? /* @__PURE__ */ React.createElement(CheckIcon, { size: 14, width: 2.4 }) : null,
           sv.name
@@ -496,7 +519,7 @@
         onClick: () => pickDay(d.i),
         style: { flex: 1, minWidth: 0, minHeight: 60, boxSizing: "border-box", padding: "6px 2px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, background: d.bg, color: d.fg, border: "2px solid " + d.border, borderRadius: 12, cursor: "pointer" }
       },
-      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, d.dow),
+      /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 700, opacity: 0.9 } }, d.hint),
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 800 } }, d.date)
     )))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700 } }, "Mekanik"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Opsional. Biarkan otomatis jika belum punya langganan.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, mechList.map((m) => /* @__PURE__ */ React.createElement(
       "button",
@@ -529,7 +552,7 @@
         onClick: () => setRemindOn(!remindOn),
         style: { width: "100%", minHeight: 64, boxSizing: "border-box", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14, textAlign: "left", background: "#FFFFFF", color: INK, border: "2px solid " + (remindOn ? INK : LINE), borderRadius: 14, cursor: "pointer" }
       },
-      /* @__PURE__ */ React.createElement(BoxCheck, { on: remindOn }),
+      /* @__PURE__ */ React.createElement(BoxCheck, { on: remindOn, accent }),
       /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, "Ingatkan jadwal servis berikutnya"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, "Dikirim per mobil dan menyebut plat nomor."))
     ), /* @__PURE__ */ React.createElement(
       "button",
@@ -539,9 +562,9 @@
         onClick: () => setPromoOn(!promoOn),
         style: { width: "100%", minHeight: 64, boxSizing: "border-box", padding: "12px 16px", display: "flex", alignItems: "center", gap: 14, textAlign: "left", background: "#FFFFFF", color: INK, border: "2px solid " + (promoOn ? INK : LINE), borderRadius: 14, cursor: "pointer" }
       },
-      /* @__PURE__ */ React.createElement(BoxCheck, { on: promoOn }),
+      /* @__PURE__ */ React.createElement(BoxCheck, { on: promoOn, accent }),
       /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, "Boleh kirim info promo"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, "Opsional. Bisa dimatikan kapan saja."))
-    )), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Biaya dan durasi final dikirim setelah mobil dicek. Pekerjaan tambahan hanya dilakukan setelah kamu setuju lewat WhatsApp.")), step === "done" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 52, height: 52, borderRadius: 26, background: "#1F7A45", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 26, width: 2 })), /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Booking berhasil"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, whenText, ". Konfirmasi sudah dikirim ke WhatsApp ", phone, ".")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode booking"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 3 } }, code), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, carsLine)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode check-in (tunjukkan di kasir saat tiba)"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 6 } }, checkin), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Petugas memakai kode ini untuk mencatat kedatanganmu. Tanpa kode, booking tidak bisa ditandai tiba.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pesan WhatsApp yang kamu terima"), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#DCF5E1", borderRadius: "14px 14px 14px 4px", fontSize: 14, lineHeight: 1.6, color: INK } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, "[Nama Bengkel] \xB7 Booking ", code, " dikonfirmasi"), /* @__PURE__ */ React.createElement("div", null, whenText), /* @__PURE__ */ React.createElement("div", null, carsLine), /* @__PURE__ */ React.createElement("div", null, "Mekanik: ", mechName))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Setelah ini"), nextSteps.map((st) => /* @__PURE__ */ React.createElement("div", { key: st.n, style: { display: "flex", gap: 12, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, flex: "none", borderRadius: 13, background: accent, color: INK, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } }, st.n), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, st.title), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, st.body))))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, prefsLine), /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Biaya dan durasi final dikirim setelah mobil dicek. Pekerjaan tambahan hanya dilakukan setelah kamu setuju lewat WhatsApp.")), step === "done" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 52, height: 52, borderRadius: 26, background: "#1F7A45", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 26, width: 2 })), /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Booking berhasil"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, whenText, ". Konfirmasi sudah dikirim ke WhatsApp ", phone, ".")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode booking"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 3 } }, code), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, carsLine)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode check-in (tunjukkan di kasir saat tiba)"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 6 } }, checkin), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Petugas memakai kode ini untuk mencatat kedatanganmu. Tanpa kode, booking tidak bisa ditandai tiba.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Contoh pesan konfirmasi yang dikirim ke WhatsApp (mode demo: belum benar-benar terkirim)"), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#DCF5E1", borderRadius: "14px 14px 14px 4px", fontSize: 14, lineHeight: 1.6, color: INK } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, "[Nama Bengkel] \xB7 Booking ", code, " dikonfirmasi"), /* @__PURE__ */ React.createElement("div", null, whenText), /* @__PURE__ */ React.createElement("div", null, carsLine), /* @__PURE__ */ React.createElement("div", null, "Mekanik: ", mechName))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Setelah ini"), nextSteps.map((st) => /* @__PURE__ */ React.createElement("div", { key: st.n, style: { display: "flex", gap: 12, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, flex: "none", borderRadius: 13, background: accent, color: INK, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } }, st.n), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, st.title), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, st.body))))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, prefsLine), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -668,19 +691,20 @@
         style: { width: "100%", height: 48, border: "none", borderRadius: 12, background: "#FFFFFF", border: "1px solid " + LINE, color: INK, fontSize: 14, fontWeight: 700, cursor: "pointer" }
       },
       "Cek booking lain"
-    ))), showFooter && /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto", paddingTop: 8 } }, /* @__PURE__ */ React.createElement(
+    ))), /* @__PURE__ */ React.createElement("details", { style: { marginTop: showFooter ? 0 : 8, paddingBottom: 4 } }, /* @__PURE__ */ React.createElement("summary", { style: { cursor: "pointer", listStyle: "none", textAlign: "center", fontSize: 12, fontWeight: 700, color: MUTED, padding: "10px 0", minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center" } }, "Akses staf bengkel"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: "4px 0 8px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 4, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Warna bengkel:"), ACCENTS.map((c) => /* @__PURE__ */ React.createElement(AccentDot, { key: c, accent, color: c, on: accent === c, onClick: () => {
+      setAccent(c);
+      writeAccent(c);
+    } }))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 16, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 13, fontWeight: 700, color: GRAY, minHeight: 44, display: "inline-flex", alignItems: "center" } }, "Panel admin bengkel \u2192"), /* @__PURE__ */ React.createElement("a", { href: "mech.html", style: { fontSize: 13, fontWeight: 700, color: GRAY, minHeight: 44, display: "inline-flex", alignItems: "center" } }, "Portal mekanik \u2192")))), showFooter && /* @__PURE__ */ React.createElement("div", { style: { position: "sticky", bottom: 0, marginTop: "auto", paddingTop: 10, paddingBottom: "calc(10px + env(safe-area-inset-bottom))", background: "linear-gradient(to top, " + BG + " 78%, rgba(242,243,245,0) 100%)" } }, /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
-        disabled: !canNext,
+        disabled: !canNext || saving,
         onClick: goNext,
-        style: { width: "100%", height: 56, border: "none", borderRadius: 14, background: canNext ? accent : LINE, color: canNext ? INK : GRAY, fontSize: 17, fontWeight: 800, cursor: "pointer", opacity: canNext ? 1 : 0.75 }
+        "aria-busy": saving,
+        style: { width: "100%", minHeight: 56, border: "none", borderRadius: 14, background: canNext ? accent : LINE, color: canNext ? INK : GRAY, fontSize: 17, fontWeight: 800, cursor: canNext ? "pointer" : "default", opacity: canNext ? 1 : 0.75 }
       },
-      NEXTLABEL[step]
-    )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "center", gap: 12, marginTop: showFooter ? 4 : 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Warna bengkel:"), ACCENTS.map((c) => /* @__PURE__ */ React.createElement(AccentDot, { key: c, accent, color: c, on: accent === c, onClick: () => {
-      setAccent(c);
-      writeAccent(c);
-    } })), /* @__PURE__ */ React.createElement("span", { style: { width: 1, height: 16, background: LINE, marginLeft: 4 } }), /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Panel admin bengkel \u2192")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "center" } }, /* @__PURE__ */ React.createElement("a", { href: "mech.html", style: { fontSize: 12, color: MUTED, fontWeight: 700 } }, "Portal mekanik \u2192"))));
+      saving ? "Menyimpan\u2026" : NEXTLABEL[step]
+    ))));
   }
   ReactDOM.createRoot(document.getElementById("root")).render(/* @__PURE__ */ React.createElement(App, null));
 })();

@@ -8,7 +8,7 @@
  *  admin: admin.html · portal mekanik: mech.html.
  * ============================================================ */
 
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 
 const INK = '#12161C';
 const GRAY = '#5A6270';
@@ -73,9 +73,9 @@ const PlusIcon = () => (
   <svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true"><path d="M10 4v12M4 10h12"></path></svg>
 );
 
-function BoxCheck({ on }) {
+function BoxCheck({ on, accent }) {
   return (
-    <span style={{ width: 26, height: 26, flex: 'none', boxSizing: 'border-box', borderRadius: 8, border: '2px solid ' + INK, background: on ? INK : '#FFFFFF', color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <span aria-hidden="true" style={{ width: 26, height: 26, flex: 'none', boxSizing: 'border-box', borderRadius: 8, border: '2px solid ' + INK, background: on ? (accent || INK) : '#FFFFFF', color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
       {on ? <CheckIcon /> : null}
     </span>
   );
@@ -83,8 +83,11 @@ function BoxCheck({ on }) {
 
 function AccentDot({ on, accent, color, onClick }) {
   return (
-    <button type="button" aria-label={'Warna aksen ' + color} onClick={onClick}
-      style={{ width: 18, height: 18, borderRadius: 9, background: color, border: on ? '2px solid ' + INK : '2px solid rgba(0,0,0,0.12)', outline: 'none', cursor: 'pointer', padding: 0 }} />
+    <button type="button" aria-label={'Warna aksen ' + color} aria-pressed={on} onClick={onClick}
+      style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0 }}>
+      <span aria-hidden="true"
+        style={{ width: 18, height: 18, borderRadius: 9, background: color, border: on ? '2px solid ' + INK : '2px solid rgba(0,0,0,0.12)', boxSizing: 'border-box' }} />
+    </button>
   );
 }
 
@@ -97,7 +100,7 @@ function App() {
     return ACCENTS.indexOf(saved) === -1 ? ACCENTS[0] : saved;
   });
   const [step, setStep] = useState('phone');
-  const [phone, setPhone] = useState('0812 0000 1234');
+  const [phone, setPhone] = useState('');
   const [otp, setOtp] = useState('');
   const [role, setRole] = useState('owner');
   const [ownerPhone, setOwnerPhone] = useState('');
@@ -118,6 +121,8 @@ function App() {
   const [remindOn, setRemindOn] = useState(true);
   const [promoOn, setPromoOn] = useState(false);
   const [code, setCode] = useState('');
+  const [saving, setSaving] = useState(false);
+  const savingRef = useRef(false);
   const [checkin, setCheckin] = useState('');
   const [savedId, setSavedId] = useState('');
 
@@ -157,8 +162,11 @@ function App() {
   })[step] === true;
 
   const goNext = () => {
-    if (!canNext) return;
+    if (!canNext || saving) return;
     if (step === 'confirm') {
+      if (savingRef.current) return;
+      savingRef.current = true;
+      setSaving(true);
       const chosenMech = mechNameOf(mech);
       const dayObj = DAYS[day];
       const booking = saveBooking({
@@ -182,6 +190,8 @@ function App() {
       setCode(booking.id);
       setCheckin(booking.checkinCode);
       setSavedId(booking.id);
+      setSaving(false);
+      savingRef.current = false;
       setStep('done');
       scrollTop();
       return;
@@ -275,7 +285,7 @@ function App() {
     { id: 'driver', label: 'Mengantar (supir atau kerabat)' }
   ].map((r) => {
     const on = role === r.id;
-    return { ...r, on, bg: on ? INK : '#FFFFFF', fg: on ? '#FFFFFF' : INK, border: on ? INK : MUTED };
+    return { ...r, on, bg: on ? accent : '#FFFFFF', fg: INK, border: on ? INK : MUTED };
   });
 
   const waits = [
@@ -283,7 +293,7 @@ function App() {
     { id: 'tinggal', label: 'Saya tinggal' }
   ].map((w) => {
     const on = wait === w.id;
-    return { ...w, on, bg: on ? INK : '#FFFFFF', fg: on ? '#FFFFFF' : INK, border: on ? INK : MUTED };
+    return { ...w, on, bg: on ? accent : '#FFFFFF', fg: INK, border: on ? INK : MUTED };
   });
   const waitNote = wait === 'tunggu'
     ? 'Kamu dapat QR di ruang tunggu untuk memantau progres dan estimasi selesai.'
@@ -291,12 +301,13 @@ function App() {
 
   const days = DAYS.map((d, i) => {
     const on = day === i;
-    return { ...d, i, on, bg: on ? INK : '#FFFFFF', fg: on ? '#FFFFFF' : INK, border: on ? INK : MUTED };
+    const hint = i === 0 ? 'Hari ini' : (i === 1 ? 'Besok' : d.dow);
+    return { ...d, i, hint, on, bg: on ? accent : '#FFFFFF', fg: INK, border: on ? INK : MUTED };
   });
 
   const mechList = MECHS.map((m) => {
     const on = mech === m.id;
-    return { ...m, on, border: on ? INK : LINE, dotBg: on ? INK : '#FFFFFF' };
+    return { ...m, on, border: on ? INK : LINE, dotBg: on ? accent : '#FFFFFF' };
   });
 
   const slotList = SLOTS.map((sl) => {
@@ -305,9 +316,9 @@ function App() {
     return {
       ...sl, ok, on,
       sub: !ok ? 'Penuh' : (on ? 'Dipilih' : 'Kosong'),
-      bg: on ? INK : (ok ? '#FFFFFF' : '#EEF0F3'),
-      fg: on ? '#FFFFFF' : (ok ? INK : GRAY),
-      subFg: on ? '#D6DAE1' : GRAY,
+      bg: on ? accent : (ok ? '#FFFFFF' : '#EEF0F3'),
+      fg: ok ? INK : GRAY,
+      subFg: on ? 'rgba(18,22,28,0.72)' : GRAY,
       border: on ? INK : (ok ? MUTED : LINE)
     };
   });
@@ -353,8 +364,8 @@ function App() {
 
   /* ---------- render ---------- */
   return (
-    <div style={{ minHeight: 844, background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, display: 'flex', justifyContent: 'center', boxSizing: 'border-box' }}>
-      <div style={{ width: '100%', maxWidth: 440, minHeight: 844, boxSizing: 'border-box', padding: '20px 20px 28px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <div style={{ minHeight: '100dvh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, display: 'flex', justifyContent: 'center', boxSizing: 'border-box' }}>
+      <div style={{ width: '100%', maxWidth: 440, minHeight: '100dvh', boxSizing: 'border-box', padding: '20px 20px 0', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
         {/* ===== Header ===== */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -365,8 +376,8 @@ function App() {
             <div style={{ fontSize: 17, fontWeight: 800 }}>[Nama Bengkel]</div>
             <div style={{ fontSize: 13, color: GRAY }}>Booking servis mobil</div>
           </div>
-          <button type="button" onClick={openLookup}
-            style={{ height: 36, padding: '0 12px', borderRadius: 18, border: '2px solid ' + LINE, background: '#FFFFFF', color: INK, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>
+          <button type="button" onClick={openLookup} aria-label="Cek status booking"
+            style={{ minHeight: 44, padding: '0 16px', borderRadius: 22, border: '2px solid ' + LINE, background: '#FFFFFF', color: INK, fontSize: 13, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>
             Cek status
           </button>
         </div>
@@ -398,13 +409,13 @@ function App() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label htmlFor="wa" style={{ fontSize: 14, fontWeight: 700 }}>Nomor WhatsApp</label>
-              <input id="wa" type="tel" placeholder="08xx xxxx xxxx" value={phone}
+              <input id="wa" type="tel" inputMode="tel" autoComplete="tel" enterKeyHint="next" placeholder="08xx xxxx xxxx" value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 style={{ width: '100%', height: 56, boxSizing: 'border-box', padding: '0 16px', border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF', color: INK, fontSize: 18 }} />
               <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY }}>Kode verifikasi dikirim lewat WhatsApp. Pelanggan lama langsung dikenali dan mobilnya terisi otomatis.</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
-              {['Pilih mobil, servis, dan jadwal dalam 4 langkah', 'Kabar progres dan biaya langsung ke WhatsApp', 'Riwayat servis tiap mobil tersimpan rapi'].map((t) => (
+              {['Pilih mobil, servis, dan jadwal tanpa bikin akun', 'Kabar progres dan biaya langsung ke WhatsApp', 'Riwayat servis tiap mobil tersimpan rapi'].map((t) => (
                 <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 12, fontSize: 15, lineHeight: 1.4 }}>
                   <span style={{ width: 24, height: 24, flex: 'none', borderRadius: 12, background: accent, display: 'flex', alignItems: 'center', justifyContent: 'center', color: INK }}>
                     <CheckIcon size={14} width={2.4} />
@@ -425,12 +436,12 @@ function App() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <label htmlFor="otp" style={{ fontSize: 14, fontWeight: 700 }}>Kode verifikasi</label>
-              <input id="otp" type="tel" inputMode="numeric" placeholder="0000" value={otp}
+              <input id="otp" type="tel" inputMode="numeric" autoComplete="one-time-code" enterKeyHint="done" autoFocus placeholder="0000" value={otp}
                 onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 4))}
                 style={{ width: '100%', height: 64, boxSizing: 'border-box', padding: '0 16px', border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF', color: INK, fontSize: 28, fontWeight: 700, letterSpacing: 12, textAlign: 'center' }} />
             </div>
             <div style={{ padding: '14px 16px', background: '#FFFFFF', border: '1px dashed ' + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY }}>
-              Catatan prototipe: ketik 4 angka apa saja, misalnya 1234.
+              Mode demo: kode belum benar-benar dikirim lewat WhatsApp. Masukkan 4 angka apa saja, misalnya 1234.
             </div>
           </div>
         )}
@@ -453,7 +464,7 @@ function App() {
                 return (
                   <button key={c.id} type="button" aria-pressed={on} onClick={() => toggleCar(c.id)}
                     style={{ width: '100%', minHeight: 72, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', background: '#FFFFFF', color: INK, border: '2px solid ' + (on ? INK : LINE), borderRadius: 14, cursor: 'pointer' }}>
-                    <BoxCheck on={on} />
+                    <BoxCheck on={on} accent={accent} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                       <span style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</span>
                       <span style={{ fontSize: 14, color: GRAY }}>{c.model}</span>
@@ -533,7 +544,7 @@ function App() {
                       return (
                         <button key={sv.id} type="button" aria-pressed={on}
                           onClick={() => setSvc((prev) => ({ ...prev, [c.id]: sv.id }))}
-                          style={{ minHeight: 44, boxSizing: 'border-box', padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6, background: on ? INK : '#FFFFFF', color: on ? '#FFFFFF' : INK, border: '2px solid ' + (on ? INK : MUTED), borderRadius: 22, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                          style={{ minHeight: 44, boxSizing: 'border-box', padding: '0 14px', display: 'flex', alignItems: 'center', gap: 6, background: on ? accent : '#FFFFFF', color: INK, border: '2px solid ' + (on ? INK : MUTED), borderRadius: 22, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
                           {on ? <CheckIcon size={14} width={2.4} /> : null}
                           {sv.name}
                         </button>
@@ -579,7 +590,7 @@ function App() {
                 {days.map((d) => (
                   <button key={d.i} type="button" aria-pressed={d.on} onClick={() => pickDay(d.i)}
                     style={{ flex: 1, minWidth: 0, minHeight: 60, boxSizing: 'border-box', padding: '6px 2px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: d.bg, color: d.fg, border: '2px solid ' + d.border, borderRadius: 12, cursor: 'pointer' }}>
-                    <span style={{ fontSize: 13 }}>{d.dow}</span>
+                    <span style={{ fontSize: 11, fontWeight: 700, opacity: 0.9 }}>{d.hint}</span>
                     <span style={{ fontSize: 14, fontWeight: 800 }}>{d.date}</span>
                   </button>
                 ))}
@@ -660,7 +671,7 @@ function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <button type="button" aria-pressed={remindOn} onClick={() => setRemindOn(!remindOn)}
                 style={{ width: '100%', minHeight: 64, boxSizing: 'border-box', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', background: '#FFFFFF', color: INK, border: '2px solid ' + (remindOn ? INK : LINE), borderRadius: 14, cursor: 'pointer' }}>
-                <BoxCheck on={remindOn} />
+                <BoxCheck on={remindOn} accent={accent} />
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span style={{ fontSize: 15, fontWeight: 700 }}>Ingatkan jadwal servis berikutnya</span>
                   <span style={{ fontSize: 13, color: GRAY }}>Dikirim per mobil dan menyebut plat nomor.</span>
@@ -668,7 +679,7 @@ function App() {
               </button>
               <button type="button" aria-pressed={promoOn} onClick={() => setPromoOn(!promoOn)}
                 style={{ width: '100%', minHeight: 64, boxSizing: 'border-box', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', background: '#FFFFFF', color: INK, border: '2px solid ' + (promoOn ? INK : LINE), borderRadius: 14, cursor: 'pointer' }}>
-                <BoxCheck on={promoOn} />
+                <BoxCheck on={promoOn} accent={accent} />
                 <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                   <span style={{ fontSize: 15, fontWeight: 700 }}>Boleh kirim info promo</span>
                   <span style={{ fontSize: 13, color: GRAY }}>Opsional. Bisa dimatikan kapan saja.</span>
@@ -700,7 +711,7 @@ function App() {
               <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY }}>Petugas memakai kode ini untuk mencatat kedatanganmu. Tanpa kode, booking tidak bisa ditandai tiba.</div>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ fontSize: 13, color: GRAY }}>Pesan WhatsApp yang kamu terima</div>
+              <div style={{ fontSize: 13, color: GRAY }}>Contoh pesan konfirmasi yang dikirim ke WhatsApp (mode demo: belum benar-benar terkirim)</div>
               <div style={{ padding: '14px 16px', background: '#DCF5E1', borderRadius: '14px 14px 14px 4px', fontSize: 14, lineHeight: 1.6, color: INK }}>
                 <div style={{ fontWeight: 700 }}>[Nama Bengkel] · Booking {code} dikonfirmasi</div>
                 <div>{whenText}</div>
@@ -861,30 +872,35 @@ function App() {
           </div>
         )}
 
-        {/* ===== Footer CTA ===== */}
+        {/* ===== Akses staf (dilipat, tidak mengganggu pelanggan) ===== */}
+        <details style={{ marginTop: showFooter ? 0 : 8, paddingBottom: 4 }}>
+          <summary style={{ cursor: 'pointer', listStyle: 'none', textAlign: 'center', fontSize: 12, fontWeight: 700, color: MUTED, padding: '10px 0', minHeight: 44, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            Akses staf bengkel
+          </summary>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: '4px 0 8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, flexWrap: 'wrap' }}>
+              <span style={{ fontSize: 12, color: MUTED }}>Warna bengkel:</span>
+              {ACCENTS.map((c) => (
+                <AccentDot key={c} accent={accent} color={c} on={accent === c} onClick={() => { setAccent(c); writeAccent(c); }} />
+              ))}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, flexWrap: 'wrap' }}>
+              <a href="admin.html" style={{ fontSize: 13, fontWeight: 700, color: GRAY, minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>Panel admin bengkel →</a>
+              <a href="mech.html" style={{ fontSize: 13, fontWeight: 700, color: GRAY, minHeight: 44, display: 'inline-flex', alignItems: 'center' }}>Portal mekanik →</a>
+            </div>
+          </div>
+        </details>
+
+        {/* ===== Footer CTA: menempel di bawah, aman dari home indicator ===== */}
         {showFooter && (
-          <div style={{ marginTop: 'auto', paddingTop: 8 }}>
-            <button type="button" disabled={!canNext} onClick={goNext}
-              style={{ width: '100%', height: 56, border: 'none', borderRadius: 14, background: canNext ? accent : LINE, color: canNext ? INK : GRAY, fontSize: 17, fontWeight: 800, cursor: 'pointer', opacity: canNext ? 1 : 0.75 }}>
-              {NEXTLABEL[step]}
+          <div style={{ position: 'sticky', bottom: 0, marginTop: 'auto', paddingTop: 10, paddingBottom: 'calc(10px + env(safe-area-inset-bottom))', background: 'linear-gradient(to top, ' + BG + ' 78%, rgba(242,243,245,0) 100%)' }}>
+            <button type="button" disabled={!canNext || saving} onClick={goNext}
+              aria-busy={saving}
+              style={{ width: '100%', minHeight: 56, border: 'none', borderRadius: 14, background: canNext ? accent : LINE, color: canNext ? INK : GRAY, fontSize: 17, fontWeight: 800, cursor: canNext ? 'pointer' : 'default', opacity: canNext ? 1 : 0.75 }}>
+              {saving ? 'Menyimpan…' : NEXTLABEL[step]}
             </button>
           </div>
         )}
-
-        {/* ===== Baris demo: pilihan warna aksen + tautan admin ===== */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: showFooter ? 4 : 0 }}>
-          <span style={{ fontSize: 12, color: MUTED }}>Warna bengkel:</span>
-          {ACCENTS.map((c) => (
-            <AccentDot key={c} accent={accent} color={c} on={accent === c} onClick={() => { setAccent(c); writeAccent(c); }} />
-          ))}
-          <span style={{ width: 1, height: 16, background: LINE, marginLeft: 4 }} />
-          <a href="admin.html" style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Panel admin bengkel →</a>
-        </div>
-
-        {/* ===== Akses sementara: portal mekanik (di bawah akses admin) ===== */}
-        <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <a href="mech.html" style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>Portal mekanik →</a>
-        </div>
       </div>
     </div>
   );

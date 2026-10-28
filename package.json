@@ -2,7 +2,7 @@
   "name": "bengkel-booking",
   "version": "1.0.0",
   "private": true,
-  "description": "Sistem booking servis mobil untuk pelanggan \u2014 port dari design Main.dc.html + panel admin bengkel",
+  "description": "Sistem booking servis mobil untuk pelanggan — port dari design Main.dc.html + panel admin bengkel",
   "engines": {
     "node": ">=18.0.0"
   },
@@ -12,9 +12,11 @@
     "build:watch": "npm run build -- --watch",
     "vercel-build": "npm run build && npm run build:site",
     "start": "python3 -m http.server 8000 --bind 0.0.0.0",
-    "preview": "node scripts/preview-server.mjs"
+    "preview": "node scripts/preview-server.mjs",
+    "test": "node tests/domain.test.mjs && node tests/ui.test.mjs"
   },
   "devDependencies": {
-    "esbuild": "^0.24.0"
+    "esbuild": "^0.24.0",
+    "jsdom": "^30.1.3"
   }
 }
