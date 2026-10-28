@@ -4,8 +4,8 @@
  *  5 langkah — Nomor WA → OTP → Mobil → Servis → Jadwal →
  *  Konfirmasi → Berhasil.
  *
- *  Data: localStorage (lihat booking.js). Halaman admin:
- *  admin.html.
+ *  Data & aturan: booking.js (satu sumber untuk 3 portal). Halaman
+ *  admin: admin.html · portal mekanik: mech.html.
  * ============================================================ */
 
 const { useState, useEffect } = React;
@@ -23,55 +23,41 @@ const STEPNAME = { 1: 'Nomor WhatsApp', 2: 'Mobil', 3: 'Servis', 4: 'Jadwal', 5:
 const NEXTLABEL = { phone: 'Kirim kode', otp: 'Verifikasi', cars: 'Lanjut', service: 'Lanjut', schedule: 'Lanjut', confirm: 'Konfirmasi booking' };
 const PREV = { otp: 'phone', cars: 'phone', service: 'cars', schedule: 'service', confirm: 'schedule' };
 
-const SERVICES = [
-  { id: 'oli', name: 'Ganti oli', mins: 45, hint: 'Perkiraan selesai ±45 menit.' },
-  { id: 'berkala', name: 'Servis berkala', mins: 120, hint: 'Perkiraan selesai ±2 jam.' },
-  { id: 'rem', name: 'Cek dan servis rem', mins: 60, hint: 'Perkiraan selesai ±1 jam.' },
-  { id: 'ac', name: 'Servis AC', mins: 90, hint: 'Perkiraan selesai ±1,5 jam.' },
-  { id: 'keluhan', name: 'Ada keluhan', mins: 0, hint: 'Mekanik cek dulu (±30–60 menit), lalu estimasi biaya dan durasi dikirim ke WhatsApp untuk kamu setujui.' },
-  { id: 'cek', name: 'Belum tahu, minta dicek', mins: 0, hint: 'Mekanik cek dulu (±30–60 menit), lalu estimasi biaya dan durasi dikirim ke WhatsApp untuk kamu setujui.' }
-];
-
-const SLOTS = [
-  { t: '08:30', free: 4 },
-  { t: '10:00', free: 2 },
-  { t: '11:30', free: 3 },
-  { t: '13:00', free: 6 },
-  { t: '14:30', free: 5 },
-  { t: '16:00', free: 1 }
-];
-
-const MECHS = [
-  { id: 'auto', name: 'Otomatis', sub: 'Dipilihkan yang kosong, paling cepat dikerjakan', busy: [] },
-  { id: 'budi', name: 'Pak Budi', sub: 'Kosong mulai 13:00', busy: ['08:30', '10:00', '11:30'] },
-  { id: 'andi', name: 'Andi', sub: 'Penuh jam 14:30', busy: ['14:30'] },
-  { id: 'rizal', name: 'Rizal', sub: 'Kosong semua jam', busy: [] },
-  { id: 'dedi', name: 'Dedi', sub: 'Penuh jam 10:00 dan 13:00', busy: ['10:00', '13:00'] }
-];
-
-const DAYS = [
-  { dow: 'Rab', date: '28 Okt', full: 'Rabu, 28 Okt' },
-  { dow: 'Kam', date: '29 Okt', full: 'Kamis, 29 Okt' },
-  { dow: 'Jum', date: '30 Okt', full: 'Jumat, 30 Okt' },
-  { dow: 'Sab', date: '31 Okt', full: 'Sabtu, 31 Okt' },
-  { dow: 'Sen', date: '2 Nov', full: 'Senin, 2 Nov' }
-];
-
-const INITIAL_CARS = [
-  { id: 'c1', plate: 'B 1234 XYZ', model: 'Toyota Avanza 2018', last: 'Servis terakhir 12 Agu 2026' },
-  { id: 'c2', plate: 'B 5678 ABC', model: 'Honda Brio 2020', last: 'Servis terakhir 3 Mei 2026' }
-];
-
-function slotOk(slot, mech, n) {
-  const sl = SLOTS.find((x) => x.t === slot);
-  if (!sl || sl.free < n) return false;
-  const m = MECHS.find((x) => x.id === mech);
-  return !(m && m.busy.includes(slot));
-}
-
 const dig = (v) => String(v || '').replace(/\D/g, '').length;
 const fmt = (m) => (m < 60 ? '±' + m + ' menit' : '±' + String(m / 60).replace('.', ',') + ' jam');
 const scrollTop = () => { try { window.scrollTo(0, 0); } catch (e) {} };
+
+/* ---------- konfigurasi master: satu sumber di booking.js ---------- */
+const SERVICES = SERVICE_CATALOG.map((sv) => ({
+  id: sv.id,
+  name: sv.name,
+  mins: sv.mins,
+  hint: sv.mins === 0
+    ? 'Mekanik cek dulu (±30–60 menit), lalu estimasi biaya dan durasi dikirim ke WhatsApp untuk kamu setujui.'
+    : 'Perkiraan selesai ' + fmt(sv.mins) + '.'
+}));
+
+const SLOTS = SLOT_TEMPLATE.map((sl) => ({ t: sl.t }));
+
+const MECHS = [{ id: 'auto', name: 'Otomatis', sub: 'Dipilihkan yang kosong, paling cepat dikerjakan' }]
+  .concat(MECHANICS.map((m) => ({ id: m.id, name: m.name, sub: 'Jadwal mengikuti booking yang masuk' })));
+
+/* Tanggal ditawarkan selalu mulai hari ini (bukan tanggal mati) */
+const DAYS = upcomingDays(DAYS_SHOWN);
+
+const mechNameOf = (id) => (id && id !== 'auto'
+  ? ((MECHANICS.find((m) => m.id === id) || {}).name || '')
+  : '');
+
+const slotOkFor = (dateISO, slot, mechId, count) => slotOk(dateISO, slot, mechNameOf(mechId), count);
+
+/* Daftar mobil dari "garasi" nomor HP (persisten, bukan data contoh) */
+const toCarList = (phoneValue) => loadVehicles(phoneValue).map((c, i) => ({
+  id: 'v' + i + '-' + String(c.plate).replace(/\W/g, ''),
+  plate: c.plate,
+  model: c.model,
+  last: c.last
+}));
 
 /* ---------- ikon (SVG dari design) ---------- */
 const WrenchIcon = () => (
@@ -115,8 +101,11 @@ function App() {
   const [otp, setOtp] = useState('');
   const [role, setRole] = useState('owner');
   const [ownerPhone, setOwnerPhone] = useState('');
-  const [cars, setCars] = useState(INITIAL_CARS);
-  const [selected, setSelected] = useState({ c1: true });
+  const [cars, setCars] = useState(() => toCarList(phone));
+  const [selected, setSelected] = useState(() => {
+    const list = toCarList(phone);
+    return list[0] ? { [list[0].id]: true } : {};
+  });
   const [addOpen, setAddOpen] = useState(false);
   const [newPlate, setNewPlate] = useState('');
   const [newModel, setNewModel] = useState('');
@@ -129,6 +118,30 @@ function App() {
   const [remindOn, setRemindOn] = useState(true);
   const [promoOn, setPromoOn] = useState(false);
   const [code, setCode] = useState('');
+  const [checkin, setCheckin] = useState('');
+  const [savedId, setSavedId] = useState('');
+
+  /* Cek status booking (pelanggan bisa pantau / batalkan / ubah jadwal) */
+  const [lookCode, setLookCode] = useState('');
+  const [lookPhone, setLookPhone] = useState('');
+  const [lookErr, setLookErr] = useState('');
+  const [looked, setLooked] = useState(null);
+  const [resDay, setResDay] = useState(0);
+  const [resSlot, setResSlot] = useState('');
+  const [resMsg, setResMsg] = useState('');
+
+  /* mobil ikut nomor HP yang dipakai booking */
+  useEffect(() => {
+    const list = toCarList(phone);
+    setCars(list);
+    setSelected((prev) => {
+      const keep = {};
+      list.forEach((c) => { if (prev[c.id] || Object.keys(prev).length === 0) keep[c.id] = true; });
+      return Object.keys(keep).length ? keep : (list[0] ? { [list[0].id]: true } : {});
+    });
+    setSvc({});
+    setSlot('');
+  }, [phone]);
 
   const driver = role === 'driver';
   const selectedCars = cars.filter((c) => selected[c.id]);
@@ -139,31 +152,36 @@ function App() {
     otp: otp.length === 4,
     cars: n >= 1 && (!driver || dig(ownerPhone) >= 9),
     service: n >= 1 && selectedCars.every((c) => !!svc[c.id]),
-    schedule: slot !== '' && slotOk(slot, mech, n),
+    schedule: slot !== '' && slotOkFor((DAYS[day] || {}).iso, slot, mech, n),
     confirm: true
   })[step] === true;
 
   const goNext = () => {
     if (!canNext) return;
     if (step === 'confirm') {
-      const mechName = mech === 'auto' ? 'Otomatis (dipilihkan bengkel)' : MECHS.find((m) => m.id === mech).name;
+      const chosenMech = mechNameOf(mech);
+      const dayObj = DAYS[day];
       const booking = saveBooking({
         phone: phone.trim(),
         role: role,
         ownerPhone: driver ? ownerPhone.trim() : '',
         cars: selectedCars.map((c) => {
           const sv = SERVICES.find((x) => x.id === svc[c.id]);
-          return { plate: c.plate, model: c.model, svc: sv ? sv.name : '-' };
+          return { plate: c.plate, model: c.model, svc: sv ? sv.name : '-', mech: chosenMech, done: false };
         }),
         note: note.trim(),
         wait: wait,
-        dayFull: DAYS[day].full,
+        dateISO: dayObj.iso,
+        dayFull: dayObj.full,
         slot: slot,
-        mech: mechName,
+        mech: chosenMech || AUTO_MECH,
         remindOn: remindOn,
-        promoOn: promoOn
+        promoOn: promoOn,
+        actor: 'pelanggan'
       });
       setCode(booking.id);
+      setCheckin(booking.checkinCode);
+      setSavedId(booking.id);
       setStep('done');
       scrollTop();
       return;
@@ -179,7 +197,8 @@ function App() {
     setStep('phone'); setOtp(''); setRole('owner'); setOwnerPhone('');
     setSelected({ c1: true }); setSvc({}); setNote('');
     setWait('tunggu'); setDay(0); setMech('auto'); setSlot('');
-    setRemindOn(true); setPromoOn(false); setCode('');
+    setRemindOn(true); setPromoOn(false); setCode(''); setCheckin(''); setSavedId('');
+    setLookErr(''); setLooked(null); setResSlot(''); setResMsg('');
     scrollTop();
   };
 
@@ -191,15 +210,60 @@ function App() {
   const saveCar = () => {
     const plate = newPlate.trim().toUpperCase();
     if (!plate) return;
-    const id = 'n' + cars.length;
-    setCars((prev) => [...prev, { id: id, plate: plate, model: newModel.trim() || 'Tipe belum diisi', last: 'Baru ditambahkan' }]);
-    setSelected((prev) => ({ ...prev, [id]: true }));
+    const res = upsertVehicle(phone, { plate: plate, model: newModel.trim() });
+    if (!res.ok) return;
+    const list = toCarList(phone);
+    const added = list.find((c) => c.plate === res.car.plate);
+    setCars(list);
+    if (added) setSelected((prev) => Object.assign({}, prev, { [added.id]: true }));
     setAddOpen(false); setNewPlate(''); setNewModel(''); setSlot('');
+  };
+
+  const pickDay = (i) => { setDay(i); setSlot(''); };
+
+  const openLookup = () => {
+    setLookErr(''); setResMsg(''); setResSlot('');
+    setLookPhone(phone);
+    setStep('status');
+    scrollTop();
+  };
+
+  const doLookup = () => {
+    const res = findBookingForCustomer(lookCode, lookPhone);
+    if (!res.ok) { setLookErr(res.error); setLooked(null); return; }
+    setLookErr('');
+    setLooked(res.booking);
+    setResDay(0);
+    setResSlot('');
+  };
+
+  const refreshLooked = (id) => {
+    const fresh = findBooking(id);
+    setLooked(fresh);
+  };
+
+  const cancelMine = () => {
+    if (!looked) return;
+    const reason = window.prompt('Alasan pembatalan (boleh dikosongkan):', '') || '';
+    const res = closeBooking(looked.id, 'cancelled', reason || 'Dibatalkan pelanggan', 'pelanggan');
+    if (!res.ok) { setResMsg(res.error); return; }
+    setResMsg('Booking dibatalkan.');
+    refreshLooked(looked.id);
+  };
+
+  const rescheduleMine = () => {
+    if (!looked || !resSlot) { setResMsg('Pilih tanggal dan jam baru dulu.'); return; }
+    const dayInfo2 = DAYS[resDay] || DAYS[0];
+    const res = rescheduleBooking(looked.id, dayInfo2.iso, resSlot, 'pelanggan');
+    if (!res.ok) { setResMsg(res.error); return; }
+    setResMsg('Jadwal dipindah ke ' + dayInfo2.full + ' · ' + resSlot + '.');
+    setResSlot('');
+    refreshLooked(looked.id);
   };
 
   const pickMech = (m) => {
     setMech(m.id);
-    if (slot && !slotOk(slot, m.id, n)) setSlot('');
+    if (slot && !slotOkFor((DAYS[day] || {}).iso, slot, m.id, n)) setSlot('');
   };
 
   /* ---------- turunan (sama persis dengan design) ---------- */
@@ -236,7 +300,7 @@ function App() {
   });
 
   const slotList = SLOTS.map((sl) => {
-    const ok = slotOk(sl.t, mech, n);
+    const ok = slotOkFor((DAYS[day] || {}).iso, sl.t, mech, n);
     const on = ok && slot === sl.t;
     return {
       ...sl, ok, on,
@@ -260,10 +324,10 @@ function App() {
   const multiNote = n + ' mobil dikerjakan bersamaan, masing-masing 1 mekanik. Jam yang tampil sudah memperhitungkan jumlah mekanik yang kosong.';
 
   const dayObj = DAYS[day];
-  const mechObj = MECHS.find((m) => m.id === mech);
-  const mechName = mech === 'auto' ? 'Otomatis (dipilihkan bengkel)' : mechObj.name;
+  const mechName = mechNameOf(mech) || AUTO_MECH;
   const whenText = dayObj.full + ' · ' + slot;
   const waitText = wait === 'tunggu' ? 'Menunggu di bengkel' : 'Mobil ditinggal';
+  const dayIso = (DAYS[day] || {}).iso;
 
   const confirmCars = selectedCars.map((c) => {
     const sv = SERVICES.find((x) => x.id === svc[c.id]);
@@ -282,9 +346,9 @@ function App() {
   ];
   const prefsLine = (remindOn ? 'Pengingat servis berikutnya aktif.' : 'Pengingat servis berikutnya tidak aktif.') + (promoOn ? ' Info promo aktif.' : ' Info promo tidak aktif.');
 
-  const showProgress = step !== 'done';
-  const showBack = step !== 'phone' && step !== 'done';
-  const showFooter = step !== 'done';
+  const showProgress = step !== 'done' && step !== 'status';
+  const showBack = step !== 'phone' && step !== 'done' && step !== 'status';
+  const showFooter = step !== 'done' && step !== 'status';
   const roleLabel = driver ? 'Pengantar' : 'Pemilik';
 
   /* ---------- render ---------- */
@@ -297,10 +361,14 @@ function App() {
           <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
             <WrenchIcon />
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1, minWidth: 0 }}>
             <div style={{ fontSize: 17, fontWeight: 800 }}>[Nama Bengkel]</div>
             <div style={{ fontSize: 13, color: GRAY }}>Booking servis mobil</div>
           </div>
+          <button type="button" onClick={openLookup}
+            style={{ height: 36, padding: '0 12px', borderRadius: 18, border: '2px solid ' + LINE, background: '#FFFFFF', color: INK, fontSize: 12, fontWeight: 700, cursor: 'pointer', flex: 'none' }}>
+            Cek status
+          </button>
         </div>
 
         {/* ===== Progress ===== */}
@@ -375,6 +443,11 @@ function App() {
               <p style={{ margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY }}>Nomor dikenali. Pilih satu atau lebih mobil yang pernah kamu servis di sini.</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {cars.length === 0 && (
+                <div style={{ padding: '14px 16px', background: '#FFFFFF', border: '1px dashed ' + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY }}>
+                  Belum ada mobil tersimpan untuk nomor ini. Tambahkan mobil dulu — data tersimpan per nomor WhatsApp.
+                </div>
+              )}
               {cars.map((c) => {
                 const on = !!selected[c.id];
                 return (
@@ -504,7 +577,7 @@ function App() {
               <div style={{ fontSize: 14, fontWeight: 700 }}>Tanggal</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {days.map((d) => (
-                  <button key={d.i} type="button" aria-pressed={d.on} onClick={() => setDay(d.i)}
+                  <button key={d.i} type="button" aria-pressed={d.on} onClick={() => pickDay(d.i)}
                     style={{ flex: 1, minWidth: 0, minHeight: 60, boxSizing: 'border-box', padding: '6px 2px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, background: d.bg, color: d.fg, border: '2px solid ' + d.border, borderRadius: 12, cursor: 'pointer' }}>
                     <span style={{ fontSize: 13 }}>{d.dow}</span>
                     <span style={{ fontSize: 14, fontWeight: 800 }}>{d.date}</span>
@@ -621,6 +694,11 @@ function App() {
               <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 3 }}>{code}</div>
               <div style={{ fontSize: 14, color: GRAY }}>{carsLine}</div>
             </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
+              <div style={{ fontSize: 13, color: GRAY }}>Kode check-in (tunjukkan di kasir saat tiba)</div>
+              <div style={{ fontSize: 28, fontWeight: 800, letterSpacing: 6 }}>{checkin}</div>
+              <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY }}>Petugas memakai kode ini untuk mencatat kedatanganmu. Tanpa kode, booking tidak bisa ditandai tiba.</div>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               <div style={{ fontSize: 13, color: GRAY }}>Pesan WhatsApp yang kamu terima</div>
               <div style={{ padding: '14px 16px', background: '#DCF5E1', borderRadius: '14px 14px 14px 4px', fontSize: 14, lineHeight: 1.6, color: INK }}>
@@ -643,10 +721,143 @@ function App() {
               ))}
             </div>
             <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY }}>{prefsLine}</div>
+            <button type="button" onClick={() => { setLookCode(code); setLookPhone(phone); openLookup(); }}
+              style={{ width: '100%', height: 56, border: 'none', borderRadius: 14, background: accent, color: INK, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+              Cek status booking
+            </button>
             <button type="button" onClick={restart}
               style={{ width: '100%', height: 56, border: '2px solid ' + INK, borderRadius: 14, background: '#FFFFFF', color: INK, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
               Buat booking baru
             </button>
+          </div>
+        )}
+
+
+        {/* ===== Cek status booking (pelanggan) ===== */}
+        {step === 'status' && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              <button type="button" aria-label="Kembali" onClick={() => { setStep('phone'); setLooked(null); scrollTop(); }}
+                style={{ width: 44, height: 44, flex: 'none', borderRadius: 12, border: '1.5px solid ' + MUTED, background: '#FFFFFF', color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: 0 }}>
+                <BackIcon />
+              </button>
+              <h1 style={{ margin: 0, fontSize: 24, lineHeight: 1.2, fontWeight: 800 }}>Cek status booking</h1>
+            </div>
+
+            {!looked && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
+                <div style={{ fontSize: 14, lineHeight: 1.5, color: GRAY }}>Masukkan kode booking dan nomor WhatsApp yang dipakai saat booking.</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label htmlFor="look-code" style={{ fontSize: 14, fontWeight: 700 }}>Kode booking</label>
+                  <input id="look-code" type="text" placeholder="BK-0271" value={lookCode}
+                    onChange={(e) => { setLookCode(e.target.value.toUpperCase()); setLookErr(''); }}
+                    style={{ width: '100%', height: 52, boxSizing: 'border-box', padding: '0 16px', border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF', color: INK, fontSize: 16, letterSpacing: 1 }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <label htmlFor="look-phone" style={{ fontSize: 14, fontWeight: 700 }}>Nomor WhatsApp</label>
+                  <input id="look-phone" type="tel" placeholder="08xx xxxx xxxx" value={lookPhone}
+                    onChange={(e) => { setLookPhone(e.target.value); setLookErr(''); }}
+                    style={{ width: '100%', height: 52, boxSizing: 'border-box', padding: '0 16px', border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF', color: INK, fontSize: 16 }} />
+                </div>
+                {lookErr ? <div style={{ fontSize: 13, lineHeight: 1.5, color: '#B42318', background: '#FDE8E6', borderRadius: 10, padding: '10px 12px' }}>{lookErr}</div> : null}
+                <button type="button" onClick={doLookup}
+                  style={{ width: '100%', height: 52, border: 'none', borderRadius: 12, background: accent, color: INK, fontSize: 16, fontWeight: 800, cursor: 'pointer' }}>
+                  Lihat status
+                </button>
+              </div>
+            )}
+
+            {looked && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: 20, fontWeight: 800, letterSpacing: 1 }}>{looked.id}</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, padding: '4px 10px', borderRadius: 999, background: (BOOKING_STATUS[looked.status] || {}).tone === 'green' ? '#DCF5E1' : (looked.status === 'cancelled' || looked.status === 'no_show' ? '#FDE8E6' : '#E7F0FD'), color: looked.status === 'done' ? '#165C34' : (looked.status === 'cancelled' || looked.status === 'no_show' ? '#B42318' : '#1D4E89') }}>
+                      {statusLabel(looked.status)}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>{looked.dayFull} · {looked.slot}</div>
+                  <div style={{ fontSize: 14, color: GRAY }}>{looked.wait === 'tunggu' ? 'Menunggu di bengkel' : 'Mobil ditinggal'} · Mekanik: {mechanicSummary(looked)}</div>
+                  {looked.status === 'confirmed' && (
+                    <div style={{ marginTop: 4, padding: '10px 12px', background: BG, borderRadius: 10 }}>
+                      <div style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Kode check-in</div>
+                      <div style={{ fontSize: 22, fontWeight: 800, letterSpacing: 5 }}>{looked.checkinCode}</div>
+                    </div>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
+                  <div style={{ fontSize: 15, fontWeight: 800 }}>Progres per mobil</div>
+                  {looked.cars.map((c) => (
+                    <div key={c.plate} style={{ display: 'flex', alignItems: 'center', gap: 10, background: BG, borderRadius: 10, padding: '8px 12px' }}>
+                      <span style={{ width: 22, height: 22, flex: 'none', borderRadius: 11, background: c.done ? '#1F7A45' : '#FFFFFF', border: '2px solid ' + (c.done ? '#1F7A45' : MUTED), color: '#FFFFFF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {c.done ? <CheckIcon size={12} width={2.6} /> : null}
+                      </span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 14, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none' }}>{c.plate}</div>
+                        <div style={{ fontSize: 12, color: GRAY }}>{c.svc} · {c.mech || 'mekanik belum ditugaskan'}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {looked.audit.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800 }}>Riwayat</div>
+                    {looked.audit.slice(0, 5).map((a, i) => (
+                      <div key={i} style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{a.action}</div>
+                        <div style={{ fontSize: 12, color: GRAY }}>{fmtDateID(a.at)} · {a.actor}{a.note ? ' · ' + a.note : ''}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {(looked.status === 'confirmed' || looked.status === 'arrived') && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
+                    <div style={{ fontSize: 15, fontWeight: 800 }}>Ubah jadwal</div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {DAYS.map((d, i) => (
+                        <button key={d.iso} type="button" onClick={() => { setResDay(i); setResSlot(''); setResMsg(''); }}
+                          style={{ flex: '1 1 auto', minHeight: 48, padding: '4px 8px', borderRadius: 10, border: '2px solid ' + (resDay === i ? INK : LINE), background: resDay === i ? accent : '#FFFFFF', color: INK, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                          {d.dow} {d.date}
+                        </button>
+                      ))}
+                    </div>
+                    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                      {SLOTS.map((sl) => {
+                        const ok = slotOk((DAYS[resDay] || {}).iso, sl.t, '', looked.cars.length, looked.id);
+                        const on = resSlot === sl.t;
+                        return (
+                          <button key={sl.t} type="button" disabled={!ok} onClick={() => { setResSlot(sl.t); setResMsg(''); }}
+                            style={{ flex: '1 1 30%', minHeight: 48, padding: '4px', borderRadius: 10, border: '2px solid ' + (on ? INK : (ok ? MUTED : LINE)), background: on ? accent : (ok ? '#FFFFFF' : '#EEF0F3'), color: ok ? INK : GRAY, fontSize: 13, fontWeight: 700, cursor: ok ? 'pointer' : 'default' }}>
+                            {sl.t}
+                          </button>
+                        );
+                      })}
+                    </div>
+                    {resMsg ? <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY }}>{resMsg}</div> : null}
+                    <button type="button" onClick={rescheduleMine}
+                      style={{ width: '100%', height: 48, border: 'none', borderRadius: 12, background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: 'pointer' }}>
+                      Simpan jadwal baru
+                    </button>
+                    <button type="button" onClick={cancelMine}
+                      style={{ width: '100%', height: 48, border: '1.5px solid ' + MUTED, borderRadius: 12, background: '#FFFFFF', color: '#B42318', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+                      Batalkan booking
+                    </button>
+                  </div>
+                )}
+
+                {resMsg && !(looked.status === 'confirmed' || looked.status === 'arrived') ? (
+                  <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY }}>{resMsg}</div>
+                ) : null}
+
+                <button type="button" onClick={() => { setLooked(null); setLookCode(''); setLookErr(''); }}
+                  style={{ width: '100%', height: 48, border: 'none', borderRadius: 12, background: '#FFFFFF', border: '1px solid ' + LINE, color: INK, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                  Cek booking lain
+                </button>
+              </div>
+            )}
           </div>
         )}
 

@@ -10,7 +10,7 @@ melihat dan mengubah statusnya, mekanik mengerjakan dan menandai selesai.
 | File | Isi |
 |---|---|
 | `index.html` | Alur booking pelanggan (mobile-first, 440px): 5 langkah — Nomor WhatsApp → OTP → Mobil → Servis → Jadwal → Konfirmasi → Berhasil |
-| `admin.html` | Panel admin: statistik, filter status, daftar booking, alur status (Tiba → Dikerjakan → Selesai), batalkan/hapus |
+| `admin.html` | Panel admin operasional: KPI per tanggal servis, verifikasi check-in, penugasan mekanik per mobil, walk-in, reschedule, batal/tidak datang dengan alasan, arsip, audit trail |
 | `mech.html` | Portal mekanik: **masuk per mekanik** (nomor HP + PIN), hanya melihat tugasnya sendiri, ambil tugas yang belum ditugaskan, progres per mobil, mulai & selesaikan pekerjaan, tombol keluar |
 
 ## Cara menjalankan
@@ -150,6 +150,38 @@ Semua perilaku design dipertahankan:
   *Selesai & serahkan*. Booking yang dibatalkan tidak ditampilkan.
   Akses sementara: tautan *Portal mekanik →* di bawah tautan admin pada
   halaman pelanggan.
+- **Aturan operasional (audit P1)** — sebelumnya semua ini belum ada:
+  - **Check-in terverifikasi**: tiap booking punya kode check-in 4 angka
+    (ditampilkan ke pelanggan di layar berhasil & halaman status). Status
+    *Tiba* hanya bisa dicatat bila kodenya cocok.
+  - **Penugasan mekanik per mobil** (`cars[].mech`) — admin bisa memilih
+    mekanik per mobil atau menekan *Tugaskan otomatis* (dibagi ke mekanik
+    paling longgar). Mekanik juga bisa mengambil mobil yang belum ada
+    mekanik. Satu mekanik maksimal 1 mobil per slot.
+  - **Kapasitas nyata**: kuota jam & mekanik dihitung dari booking yang
+    ada (bukan konstanta), per tanggal. Tanggal yang ditawarkan selalu
+    mulai hari ini; hari tutup/libur bisa diatur (`CLOSED_DOW`, `HOLIDAYS`).
+  - **Walk-in**: admin bisa mendaftarkan pelanggan yang datang langsung
+    (langsung berstatus *Tiba*, ditandai WALK-IN).
+  - **Reschedule & pembatalan oleh pelanggan** lewat menu *Cek status*
+    (kode booking + nomor HP), termasuk pilihan tanggal/jam yang masih
+    kosong. Admin membatalkan dengan **alasan wajib**, atau menandai
+    **Tidak datang** (slot otomatis dilepas).
+  - **Alur status dijaga** (`STATUS_FLOW`): transisi liar/typo ditolak.
+  - **Audit trail** per booking: siapa (admin / mekanik:X / pelanggan),
+    aksi, dari-ke status, dan catatan — tampil di admin & halaman status.
+  - **Arsip (soft delete)**: tombol *Arsipkan* menggantikan hapus permanen;
+    pemulihan dan hapus permanen hanya dari tab *Arsip*.
+  - **Garasi pelanggan persisten**: mobil tersimpan per nomor HP
+    (`bengkel.vehicles.v1`), jadi tambah mobil tidak hilang saat refresh.
+  - **KPI benar**: "Servis hari ini" dihitung dari tanggal servis
+    (`dateISO`), bukan tanggal booking dibuat. Ada tab *Tidak datang* dan
+    *Arsip*.
+  - **Data contoh dipisah**: id `BK-C001…` (tidak memakai nomor urut
+    asli), bertanda CONTOH, dan bisa dihapus dengan satu tombol.
+  - **Satu sumber konfigurasi**: `SERVICE_CATALOG`, `MECHANICS`,
+    `SLOT_TEMPLATE`, `CLOSED_DOW`/`HOLIDAYS` hanya di `booking.js` —
+    tidak lagi diduplikasi di tiap portal.
 - **Persistensi**: booking tersimpan di `localStorage` (kunci
   `bengkel.bookings.v1`), jadi pelanggan dan admin di browser yang sama
   saling terhubung tanpa backend. Sesi portal mekanik memakai kunci
@@ -196,12 +228,12 @@ bengkel-booking/
 | Nama bengkel | Cari-ganti `[Nama Bengkel]` di `src/app.jsx`, `src/admin.jsx` & `src/mech.jsx`, lalu build |
 | Akun mekanik (nama, nomor HP, PIN) | `MECH_ACCOUNTS` di `src/mech.jsx` — `name` harus sama dengan `MECHS` di `src/app.jsx` |
 | Durasi per servis di portal mekanik | `SVC_MINS` di `src/mech.jsx` (samakan dengan `SERVICES` di `src/app.jsx`) |
-| Daftar servis + durasi | `SERVICES` di `src/app.jsx` |
-| Jam & kuota per jam | `SLOTS` di `src/app.jsx` |
-| Mekanik + jam sibuk | `MECHS` di `src/app.jsx` |
-| Tanggal yang bisa dipilih | `DAYS` di `src/app.jsx` |
+| Daftar servis + durasi | `SERVICE_CATALOG` di `booking.js` |
+| Jam & kuota per jam | `SLOT_TEMPLATE` di `booking.js` |
+| Mekanik (nama, HP, PIN) | `MECHANICS` di `booking.js` |
+| Tanggal yang ditawarkan | `DAYS_SHOWN`/`DAYS_AHEAD`, `CLOSED_DOW`, `HOLIDAYS` di `booking.js` |
 | Warna aksen | `ACCENTS` di `src/app.jsx`; default `DEFAULT_ACCENT` di `booking.js` |
-| Alur status admin | `NEXT_ACTION` & `BOOKING_STATUS` di `src/admin.jsx` / `booking.js` |
+| Alur status | `STATUS_FLOW` & `BOOKING_STATUS` di `booking.js` |
 
 ## Menyambung ke backend sungguhan
 
@@ -210,9 +242,20 @@ Semua akses data terpusat di `booking.js`:
 ```js
 loadBookings()          // daftar booking
 saveBooking(data)       // tambah booking (kembali dengan id)
-updateBookingStatus(id, status)
-updateBooking(id, patch)   // ubah sebagian field (dipakai progres per mobil)
-deleteBooking(id)
+updateBookingStatus(id, to, actor, note)  // dijaga STATUS_FLOW
+updateBooking(id, patch, actor)           // whitelist field
+checkInBooking(id, code, actor)
+closeBooking(id, 'cancelled'|'no_show', reason, actor)
+rescheduleBooking(id, dateISO, slot, actor)
+assignMechanic(id, carIndex, mechName, actor)
+autoAssignMechanics(id, actor)
+setCarDone(id, carIndex, done, actor)
+archiveBooking(id, actor) / restoreBooking(id) / purgeBooking(id)
+slotOk(dateISO, slot, mechName, carCount, ignoreId)  // ketersediaan nyata
+slotFree(dateISO, slot) / mechFree(dateISO, slot, name)
+upcomingDays(n) / bookableDays()
+loadVehicles(phone) / upsertVehicle(phone, car)
+findBookingForCustomer(code, phone)
 nextCode()              // penomoran BK-0001...
 readAccent()            // warna aksen pilihan pelanggan (default #FFB81C)
 writeAccent(color)      // simpan warna aksen
@@ -237,8 +280,11 @@ ingin menguji hasil deploy secara lokal:
 
 ```bash
 npm run vercel-build
-python3 -m http.server 8000 --directory public
+npm run preview        # http://localhost:8000 (Cache-Control: no-store)
 ```
+
+`npm run preview` menyajikan `public/` seperti Vercel (tanpa cache), berguna
+saat menguji tiga portal berdampingan.
 
 Hasil build sudah disertakan, jadi build ulang hanya perlu jika Anda
 mengedit sumber JSX.
