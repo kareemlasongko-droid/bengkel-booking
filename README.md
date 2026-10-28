@@ -226,7 +226,7 @@ bengkel-booking/
 | Yang mau diubah | Lokasi |
 |---|---|
 | Nama bengkel | Cari-ganti `[Nama Bengkel]` di `src/app.jsx`, `src/admin.jsx` & `src/mech.jsx`, lalu build |
-| Akun mekanik (nama, nomor HP, PIN) | `MECH_ACCOUNTS` di `src/mech.jsx` — `name` harus sama dengan `MECHS` di `src/app.jsx` |
+| Akun mekanik (nama, nomor HP, PIN) | `MECHANICS` di `booking.js` (portal mekanik memakainya lewat alias `MECH_ACCOUNTS`) — dipakai juga oleh pilihan mekanik di `src/app.jsx` |
 | Durasi per servis di portal mekanik | `SVC_MINS` di `src/mech.jsx` (samakan dengan `SERVICES` di `src/app.jsx`) |
 | Daftar servis + durasi | `SERVICE_CATALOG` di `booking.js` |
 | Jam & kuota per jam | `SLOT_TEMPLATE` di `booking.js` |
