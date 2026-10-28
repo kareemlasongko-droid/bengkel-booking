@@ -7,7 +7,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
-    "build": "esbuild src/app.jsx --outfile=app.js --format=iife --jsx=transform --target=es2017 && esbuild src/admin.jsx --outfile=admin.js --format=iife --jsx=transform --target=es2017",
+    "build": "esbuild src/app.jsx --outfile=app.js --format=iife --jsx=transform --target=es2017 && esbuild src/admin.jsx --outfile=admin.js --format=iife --jsx=transform --target=es2017 && esbuild src/mech.jsx --outfile=mech.js --format=iife --jsx=transform --target=es2017",
     "build:site": "node scripts/build-static.mjs",
     "build:watch": "npm run build -- --watch",
     "vercel-build": "npm run build && npm run build:site",

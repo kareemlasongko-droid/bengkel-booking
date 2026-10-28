@@ -666,6 +666,11 @@ function App() {
           <span style={{ width: 1, height: 16, background: LINE, marginLeft: 4 }} />
           <a href="admin.html" style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Panel admin bengkel →</a>
         </div>
+
+        {/* ===== Akses sementara: portal mekanik (di bawah akses admin) ===== */}
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <a href="mech.html" style={{ fontSize: 12, color: MUTED, fontWeight: 700 }}>Portal mekanik →</a>
+        </div>
       </div>
     </div>
   );

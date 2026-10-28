@@ -17,7 +17,7 @@ const ROOT = process.cwd();
 const OUT = path.join(ROOT, 'public');
 
 /* File yang wajib ada di root dan ikut disajikan */
-const FILES = ['index.html', 'admin.html', 'app.js', 'admin.js', 'booking.js'];
+const FILES = ['index.html', 'admin.html', 'mech.html', 'app.js', 'admin.js', 'mech.js', 'booking.js'];
 /* Folder aset yang ikut disalin */
 const DIRS = ['vendor'];
 

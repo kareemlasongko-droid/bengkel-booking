@@ -1,9 +1,9 @@
 # Sistem Booking Bengkel
 
 Sistem booking servis mobil untuk pelanggan — implementasi setia dari design
-terlampir (`Main.dc.html`), ditambah **panel admin bengkel** agar menjadi
-sistem yang utuh: pelanggan membuat booking, admin melihat dan
-mengubah statusnya.
+terlampir (`Main.dc.html`), ditambah **panel admin bengkel** dan **portal
+mekanik** agar menjadi sistem yang utuh: pelanggan membuat booking, admin
+melihat dan mengubah statusnya, mekanik mengerjakan dan menandai selesai.
 
 ## Halaman
 
@@ -11,6 +11,7 @@ mengubah statusnya.
 |---|---|
 | `index.html` | Alur booking pelanggan (mobile-first, 440px): 5 langkah — Nomor WhatsApp → OTP → Mobil → Servis → Jadwal → Konfirmasi → Berhasil |
 | `admin.html` | Panel admin: statistik, filter status, daftar booking, alur status (Tiba → Dikerjakan → Selesai), batalkan/hapus |
+| `mech.html` | Portal mekanik: pilih mekanik, daftar tugas, progres per mobil, mulai & selesaikan pekerjaan |
 
 ## Cara menjalankan
 
@@ -20,8 +21,9 @@ lokal di `vendor/`:
 ```bash
 # dari folder ini
 python3 -m http.server 8000
-# buka http://localhost:8000  (pelanggan)
+# buka http://localhost:8000            (pelanggan)
 # buka http://localhost:8000/admin.html  (admin)
+# buka http://localhost:8000/mech.html   (mekanik)
 ```
 
 Atau cukup buka `index.html` langsung di browser (file://) — tetap berjalan.
@@ -60,8 +62,8 @@ Isi `public/` (dibuat otomatis, tidak di-commit — lihat `.gitignore`):
 
 ```
 public/
-├── index.html   admin.html
-├── app.js       admin.js      booking.js
+├── index.html   admin.html   mech.html
+├── app.js       admin.js     mech.js     booking.js
 └── vendor/react.js  vendor/react-dom.js
 ```
 
@@ -74,7 +76,8 @@ Langkah deploy:
 2. **Root Directory: kosongkan** (jangan diisi `.`, `/`, atau nama subfolder).
 3. Framework Preset / Build Command / Output Directory: **biarkan default** —
    `vercel.json` yang menentukan (nilainya menimpa setting dashboard).
-4. Deploy. Hasilnya `/` → halaman pelanggan, `/admin.html` → panel admin.
+4. Deploy. Hasilnya `/` → halaman pelanggan, `/admin.html` → panel admin,
+   `/mech.html` → portal mekanik.
 
 ### Troubleshooting
 
@@ -91,9 +94,9 @@ khusus setting dashboard. Karena itu jangan diisi apa pun.
 
 Catatan lain:
 
-- Tautan antar-halaman memakai path relatif (`admin.html`, `index.html`,
-  `./vendor/...`, `./app.js`), jadi tetap jalan baik di root domain maupun di
-  preview deployment — tidak ada URL absolut yang perlu diubah.
+- Tautan antar-halaman memakai path relatif (`index.html`, `admin.html`,
+  `mech.html`, `./vendor/...`, `./app.js`), jadi tetap jalan baik di root
+  domain maupun di preview deployment — tidak ada URL absolut yang perlu diubah.
 - `.vercelignore` mencegah `node_modules`, `public/` (hasil build lama),
   artefak tunnel lama (`tunnel.log`, `tunnel-watchdog.sh`, `PUBLIC_URL.txt`),
   dan `README.md` ikut ter-upload sebagai file publik.
@@ -131,6 +134,14 @@ Semua perilaku design dipertahankan:
 - **Panel admin** (`admin.html`) — design hanya berisi sisi pelanggan.
   Status booking dapat digerakkan: Konfirmasi → Tiba → Dikerjakan → Selesai
   (atau Dibatalkan). Ada data contoh ("Muat data contoh").
+- **Portal mekanik** (`mech.html`) — sisi pengerjaan di bengkel, memakai
+  bahasa desain yang sama (kartu, chip status, statistik, tab filter):
+  pilih mekanik (atau *Semua mekanik* / *Belum ditugaskan*), lihat tugas
+  yang ditugaskan beserta durasi servisnya, **tandai selesai per mobil**
+  (tersimpan di `doneCars`), *Catat kedatangan* → *Mulai dikerjakan* →
+  *Selesai & serahkan*. Booking yang dibatalkan tidak ditampilkan.
+  Akses sementara: tautan *Portal mekanik →* di bawah tautan admin pada
+  halaman pelanggan.
 - **Persistensi**: booking tersimpan di `localStorage` (kunci
   `bengkel.bookings.v1`), jadi pelanggan dan admin di browser yang sama
   saling terhubung tanpa backend.
@@ -144,12 +155,15 @@ Semua perilaku design dipertahankan:
 bengkel-booking/
 ├── index.html          # halaman pelanggan
 ├── admin.html          # halaman admin
+├── mech.html           # portal mekanik
 ├── booking.js          # lapisan data bersama (localStorage) + data contoh
 ├── app.js              # aplikasi pelanggan (sudah terkompilasi)
 ├── admin.js            # aplikasi admin (sudah terkompilasi)
+├── mech.js             # aplikasi mekanik (sudah terkompilasi)
 ├── src/
 │   ├── app.jsx         # sumber aplikasi pelanggan (React JSX)
-│   └── admin.jsx       # sumber aplikasi admin (React JSX)
+│   ├── admin.jsx       # sumber aplikasi admin (React JSX)
+│   └── mech.jsx        # sumber portal mekanik (React JSX)
 ├── vendor/
 │   ├── react.js        # React 18 (UMD, lokal — tanpa CDN)
 │   └── react-dom.js
@@ -166,7 +180,9 @@ bengkel-booking/
 
 | Yang mau diubah | Lokasi |
 |---|---|
-| Nama bengkel | Cari-ganti `[Nama Bengkel]` di `src/app.jsx` & `src/admin.jsx`, lalu build |
+| Nama bengkel | Cari-ganti `[Nama Bengkel]` di `src/app.jsx`, `src/admin.jsx` & `src/mech.jsx`, lalu build |
+| Daftar mekanik di portal mekanik | `MECH_LIST` di `src/mech.jsx` (samakan dengan `MECHS` di `src/app.jsx`) |
+| Durasi per servis di portal mekanik | `SVC_MINS` di `src/mech.jsx` (samakan dengan `SERVICES` di `src/app.jsx`) |
 | Daftar servis + durasi | `SERVICES` di `src/app.jsx` |
 | Jam & kuota per jam | `SLOTS` di `src/app.jsx` |
 | Mekanik + jam sibuk | `MECHS` di `src/app.jsx` |
@@ -182,6 +198,7 @@ Semua akses data terpusat di `booking.js`:
 loadBookings()          // daftar booking
 saveBooking(data)       // tambah booking (kembali dengan id)
 updateBookingStatus(id, status)
+updateBooking(id, patch)   // ubah sebagian field (dipakai progres per mobil)
 deleteBooking(id)
 nextCode()              // penomoran BK-0001...
 ```

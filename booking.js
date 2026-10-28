@@ -61,6 +61,18 @@ function updateBookingStatus(id, status) {
   return b;
 }
 
+/* Ubah sebagian field booking tanpa menyentuh sisanya.
+   Dipakai portal mekanik untuk progres per mobil (doneCars). */
+function updateBooking(id, patch) {
+  const list = loadBookings();
+  const b = list.find((x) => x.id === id);
+  if (b) {
+    Object.assign(b, patch, { updatedAt: new Date().toISOString() });
+    persistBookings(list);
+  }
+  return b;
+}
+
 function deleteBooking(id) {
   persistBookings(loadBookings().filter((x) => x.id !== id));
 }
