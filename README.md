@@ -155,7 +155,11 @@ Semua perilaku design dipertahankan:
   saling terhubung tanpa backend. Sesi portal mekanik memakai kunci
   terpisah `bengkel.mech.session.v1` dan hanya menyimpan id mekanik.
 - **Pilihan warna aksen** (titik warna di bawah CTA) — sesuai prop `accent`
-  di design dengan 4 opsi warna.
+  di design dengan 4 opsi warna. Pilihan **tersimpan** di
+  `localStorage` (`bengkel.accent.v1`) dan dipakai bersama: tombol aktif di
+  **panel admin** dan **portal mekanik** (tab terpilih, tombol aksi utama,
+  ikon header) memakai warna aksen ini, bukan hitam. Bila belum pernah
+  dipilih, default `#FFB81C`.
 - Tautan *Panel admin bengkel →* di bagian bawah halaman pelanggan.
 
 ## Struktur
@@ -196,7 +200,7 @@ bengkel-booking/
 | Jam & kuota per jam | `SLOTS` di `src/app.jsx` |
 | Mekanik + jam sibuk | `MECHS` di `src/app.jsx` |
 | Tanggal yang bisa dipilih | `DAYS` di `src/app.jsx` |
-| Warna aksen | `ACCENTS` di `src/app.jsx` |
+| Warna aksen | `ACCENTS` di `src/app.jsx`; default `DEFAULT_ACCENT` di `booking.js` |
 | Alur status admin | `NEXT_ACTION` & `BOOKING_STATUS` di `src/admin.jsx` / `booking.js` |
 
 ## Menyambung ke backend sungguhan
@@ -210,6 +214,8 @@ updateBookingStatus(id, status)
 updateBooking(id, patch)   // ubah sebagian field (dipakai progres per mobil)
 deleteBooking(id)
 nextCode()              // penomoran BK-0001...
+readAccent()            // warna aksen pilihan pelanggan (default #FFB81C)
+writeAccent(color)      // simpan warna aksen
 ```
 
 Ganti isi fungsi-fungsi itu dengan `fetch()` ke API Anda — dua halaman

@@ -54,7 +54,7 @@ function StatCard({ label, value, sub }) {
   );
 }
 
-function BookingCard({ b, onAdvance, onCancel, onDelete }) {
+function BookingCard({ b, onAdvance, onCancel, onDelete, accent }) {
   const canAdvance = NEXT_ACTION[b.status];
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -103,7 +103,7 @@ function BookingCard({ b, onAdvance, onCancel, onDelete }) {
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
         {canAdvance ? (
           <button type="button" onClick={() => onAdvance(b.id, canAdvance.to)}
-            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: INK, color: '#FFFFFF', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
             {canAdvance.label}
           </button>
         ) : null}
@@ -123,6 +123,7 @@ function BookingCard({ b, onAdvance, onCancel, onDelete }) {
 }
 
 function Admin() {
+  const accent = useAccent();
   const [bookings, setBookings] = useState(() => loadBookings());
   const [filter, setFilter] = useState('all');
 
@@ -157,7 +158,7 @@ function Admin() {
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: '#FFB81C', color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
             <WrenchIcon />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -181,7 +182,7 @@ function Admin() {
             const on = filter === t.id;
             return (
               <button key={t.id} type="button" onClick={() => setFilter(t.id)}
-                style={{ height: 40, padding: '0 14px', borderRadius: 20, border: '2px solid ' + (on ? INK : LINE), background: on ? INK : '#FFFFFF', color: on ? '#FFFFFF' : INK, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                style={{ height: 40, padding: '0 14px', borderRadius: 20, border: '2px solid ' + (on ? INK : LINE), background: on ? accent : '#FFFFFF', color: INK, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 {t.label}
               </button>
             );
@@ -198,7 +199,7 @@ function Admin() {
               atau muat data contoh untuk melihat tata letaknya.
             </div>
             <button type="button" onClick={() => { seedSampleBookings(); refresh(); }}
-              style={{ height: 48, padding: '0 20px', borderRadius: 12, border: 'none', background: INK, color: '#FFFFFF', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ height: 48, padding: '0 20px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               Muat data contoh
             </button>
           </div>
@@ -208,6 +209,7 @@ function Admin() {
               <BookingCard
                 key={b.id}
                 b={b}
+                accent={accent}
                 onAdvance={(id, to) => { updateBookingStatus(id, to); refresh(); }}
                 onCancel={(id) => { if (confirm('Batalkan booking ' + id + '?')) { updateBookingStatus(id, 'cancelled'); refresh(); } }}
                 onDelete={(id) => { if (confirm('Hapus booking ' + id + '? Tindakan ini tidak bisa dibatalkan.')) { deleteBooking(id); refresh(); } }}

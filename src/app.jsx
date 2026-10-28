@@ -106,7 +106,10 @@ function AccentDot({ on, accent, color, onClick }) {
  *  Aplikasi utama
  * ============================================================ */
 function App() {
-  const [accent, setAccent] = useState(ACCENTS[0]);
+  const [accent, setAccent] = useState(() => {
+    const saved = readAccent();
+    return ACCENTS.indexOf(saved) === -1 ? ACCENTS[0] : saved;
+  });
   const [step, setStep] = useState('phone');
   const [phone, setPhone] = useState('0812 0000 1234');
   const [otp, setOtp] = useState('');
@@ -661,7 +664,7 @@ function App() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginTop: showFooter ? 4 : 0 }}>
           <span style={{ fontSize: 12, color: MUTED }}>Warna bengkel:</span>
           {ACCENTS.map((c) => (
-            <AccentDot key={c} accent={accent} color={c} on={accent === c} onClick={() => setAccent(c)} />
+            <AccentDot key={c} accent={accent} color={c} on={accent === c} onClick={() => { setAccent(c); writeAccent(c); }} />
           ))}
           <span style={{ width: 1, height: 16, background: LINE, marginLeft: 4 }} />
           <a href="admin.html" style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Panel admin bengkel →</a>

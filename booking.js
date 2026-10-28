@@ -7,6 +7,39 @@
 
 const STORE_KEY = 'bengkel.bookings.v1';
 const SEQ_KEY = 'bengkel.seq.v1';
+const ACCENT_KEY = 'bengkel.accent.v1';
+const DEFAULT_ACCENT = '#FFB81C';
+
+/* Warna aksen bengkel — dipilih pelanggan di situs publik, lalu
+   dipakai juga oleh panel admin & portal mekanik (satu origin). */
+function readAccent() {
+  try {
+    const v = localStorage.getItem(ACCENT_KEY);
+    return /^#[0-9a-fA-F]{6}$/.test(v || '') ? v : DEFAULT_ACCENT;
+  } catch (e) {
+    return DEFAULT_ACCENT;
+  }
+}
+
+function writeAccent(color) {
+  try { localStorage.setItem(ACCENT_KEY, color); } catch (e) {}
+}
+
+/* Hook kecil untuk panel admin & portal mekanik: warna aksen aktif,
+   ikut berubah bila pelanggan mengganti warna di tab/aplikasi lain. */
+function useAccent() {
+  const [accent, setAccent] = React.useState(readAccent);
+  React.useEffect(() => {
+    const sync = () => setAccent(readAccent());
+    window.addEventListener('focus', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('focus', sync);
+      window.removeEventListener('storage', sync);
+    };
+  }, []);
+  return accent;
+}
 
 const BOOKING_STATUS = {
   confirmed: { label: 'Konfirmasi', tone: 'blue' },

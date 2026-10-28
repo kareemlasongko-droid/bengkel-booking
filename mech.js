@@ -5,7 +5,6 @@
   const LINE = "#DDE1E7";
   const MUTED = "#8791A0";
   const BG = "#F2F3F5";
-  const AMBER = "#FFB81C";
   const GREEN = "#1F7A45";
   const RED = "#B42318";
   const TONE = {
@@ -84,6 +83,7 @@
     fontSize: 18
   };
   function Login({ onLogin }) {
+    const accent = useAccent();
     const [phone, setPhone] = useState("");
     const [pin, setPin] = useState("");
     const [err, setErr] = useState("");
@@ -104,7 +104,7 @@
       setErr("");
       onLogin({ id: found.id, name: found.name, phone: found.phone });
     };
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 440, margin: "0 auto", padding: "32px 20px 48px", display: "flex", flexDirection: "column", gap: 20, minHeight: "100vh", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: AMBER, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Portal Mekanik"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Masuk dari HP mekanik masing-masing"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Masuk sebagai mekanik"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Gunakan nomor HP yang terdaftar di bengkel dan PIN 4 angka kamu.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16, padding: 20, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "mech-phone", style: { fontSize: 14, fontWeight: 700 } }, "Nomor HP"), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 440, margin: "0 auto", padding: "32px 20px 48px", display: "flex", flexDirection: "column", gap: 20, minHeight: "100vh", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Portal Mekanik"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Masuk dari HP mekanik masing-masing"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Masuk sebagai mekanik"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Gunakan nomor HP yang terdaftar di bengkel dan PIN 4 angka kamu.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16, padding: 20, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "mech-phone", style: { fontSize: 14, fontWeight: 700 } }, "Nomor HP"), /* @__PURE__ */ React.createElement(
       "input",
       {
         id: "mech-phone",
@@ -144,7 +144,7 @@
         type: "button",
         disabled: !canSubmit,
         onClick: submit,
-        style: { width: "100%", height: 56, border: "none", borderRadius: 14, background: canSubmit ? INK : LINE, color: canSubmit ? "#FFFFFF" : GRAY, fontSize: 17, fontWeight: 800, cursor: canSubmit ? "pointer" : "default" }
+        style: { width: "100%", height: 56, border: "none", borderRadius: 14, background: canSubmit ? accent : LINE, color: canSubmit ? INK : GRAY, fontSize: 17, fontWeight: 800, cursor: canSubmit ? "pointer" : "default" }
       },
       "Masuk"
     ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Sesi tersimpan di HP ini, jadi kamu tidak perlu mengetik ulang setiap membuka portal. Selalu ada tombol ", /* @__PURE__ */ React.createElement("b", null, "Keluar"), " untuk berganti mekanik.")), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement(
@@ -157,7 +157,7 @@
       showDemo ? "Sembunyikan akun demo" : "Lihat akun demo (prototipe)"
     ), showDemo ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: GRAY } }, MECH_ACCOUNTS.map((a) => /* @__PURE__ */ React.createElement("div", { key: a.id, style: { display: "flex", justifyContent: "space-between", gap: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: INK } }, a.name), /* @__PURE__ */ React.createElement("span", null, a.phone, " \xB7 PIN ", a.pin)))) : null), /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "\u2190 Panel admin"), /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Situs pelanggan \u2192"))));
   }
-  function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim }) {
+  function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim, accent }) {
     const total = b.cars.length;
     const doneCars = Array.isArray(b.doneCars) ? b.doneCars : [];
     const done = b.cars.filter((c, i) => doneCars.indexOf(i) !== -1).length;
@@ -183,7 +183,7 @@
       {
         type: "button",
         onClick: () => onClaim(b.id),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: AMBER, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
       "Ambil tugas ini"
     ), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Belum ada mekanik yang ditugaskan.")) : null, b.status === "confirmed" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
@@ -199,7 +199,7 @@
       {
         type: "button",
         onClick: () => onStart(b.id),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: INK, color: "#FFFFFF", fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
       "Mulai dikerjakan"
     ) : null, b.status === "in_progress" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
@@ -207,12 +207,13 @@
       {
         type: "button",
         onClick: () => onFinish(b.id, allDone, total - done),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: allDone ? INK : AMBER, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer", opacity: allDone ? 1 : 0.78 }
       },
       "Selesai & serahkan"
     ), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: GRAY } }, allDone ? "Semua mobil sudah ditandai selesai." : total - done + " mobil belum ditandai selesai.")) : null, b.status === "done" ? /* @__PURE__ */ React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: GREEN } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 16 }), " Selesai ", b.updatedAt ? fmtDateID(b.updatedAt) : "") : null));
   }
   function Dashboard({ session, onLogout }) {
+    const accent = useAccent();
     const [bookings, setBookings] = useState(() => loadBookings());
     const [scope, setScope] = useState("mine");
     const [filter, setFilter] = useState("all");
@@ -265,13 +266,13 @@
       padding: "0 14px",
       borderRadius: 20,
       border: "2px solid " + (on ? INK : LINE),
-      background: on ? INK : "#FFFFFF",
-      color: on ? "#FFFFFF" : INK,
+      background: on ? accent : "#FFFFFF",
+      color: INK,
       fontSize: 13,
       fontWeight: 700,
       cursor: "pointer"
     });
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 880, margin: "0 auto", padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: AMBER, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "Halo, ", session.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "[Nama Bengkel] \xB7 ", session.phone)), /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "Panel admin"), /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 880, margin: "0 auto", padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "Halo, ", session.name), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "[Nama Bengkel] \xB7 ", session.phone)), /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "Panel admin"), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -293,7 +294,7 @@
           seedSampleBookings();
           refresh();
         },
-        style: { height: 48, padding: "0 20px", borderRadius: 12, border: "none", background: INK, color: "#FFFFFF", fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { height: 48, padding: "0 20px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
       "Muat data contoh"
     ) : null) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, filtered.map((b) => /* @__PURE__ */ React.createElement(
@@ -301,6 +302,7 @@
       {
         key: b.id,
         b,
+        accent,
         onClaim: claim,
         onArrive: (id) => {
           updateBookingStatus(id, "arrived");

@@ -27,14 +27,14 @@
   function StatCard({ label, value, sub }) {
     return /* @__PURE__ */ React.createElement("div", { style: { flex: "1 1 140px", minWidth: 130, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 14, padding: "14px 16px" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, label), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 26, fontWeight: 800, marginTop: 2 } }, value), sub ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, marginTop: 2 } }, sub) : null);
   }
-  function BookingCard({ b, onAdvance, onCancel, onDelete }) {
+  function BookingCard({ b, onAdvance, onCancel, onDelete, accent }) {
     const canAdvance = NEXT_ACTION[b.status];
     return /* @__PURE__ */ React.createElement("div", { style: { background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800, letterSpacing: 1 } }, b.id), /* @__PURE__ */ React.createElement(StatusChip, { status: b.status })), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, fmtDateID(b.createdAt), " WIB")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Jadwal"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.dayFull, " \xB7 ", b.slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal", " \xB7 Mekanik: ", b.mech)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Kontak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.role === "driver" ? "Pengantar" : "Pemilik", " \xB7 ", b.phone), b.ownerPhone ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pemilik (persetujuan biaya): ", b.ownerPhone) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.remindOn ? "Pengingat servis: aktif" : "Pengingat servis: mati", " \xB7 ", b.promoOn ? "Promo: boleh" : "Promo: tidak"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, b.cars.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, background: BG, borderRadius: 10, padding: "8px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, " \xB7 ", c.model)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 700, textAlign: "right" } }, c.svc)))), b.note ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY, background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 10, padding: "8px 12px" } }, "Catatan: ", b.note) : null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, canAdvance ? /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick: () => onAdvance(b.id, canAdvance.to),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: INK, color: "#FFFFFF", fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
       canAdvance.label
     ) : null, b.status === "confirmed" || b.status === "arrived" ? /* @__PURE__ */ React.createElement(
@@ -56,6 +56,7 @@
     )));
   }
   function Admin() {
+    const accent = useAccent();
     const [bookings, setBookings] = useState(() => loadBookings());
     const [filter, setFilter] = useState("all");
     const refresh = () => setBookings(loadBookings());
@@ -78,7 +79,7 @@
       { id: "done", label: "Selesai (" + stats.done + ")" },
       { id: "cancelled", label: "Dibatalkan (" + bookings.filter((b) => b.status === "cancelled").length + ")" }
     ];
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 880, margin: "0 auto", padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: "#FFB81C", color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Panel Admin"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kelola booking servis masuk")), /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "\u2190 Situs pelanggan")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Booking hari ini", value: stats.today }), /* @__PURE__ */ React.createElement(StatCard, { label: "Menunggu konfirmasi tiba", value: stats.confirmed }), /* @__PURE__ */ React.createElement(StatCard, { label: "Sedang dikerjakan", value: stats.in_progress }), /* @__PURE__ */ React.createElement(StatCard, { label: "Selesai", value: stats.done })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, tabs.map((t) => {
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { maxWidth: 880, margin: "0 auto", padding: "24px 20px 48px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, "[Nama Bengkel] \xB7 Panel Admin"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kelola booking servis masuk")), /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { fontSize: 13, fontWeight: 800, color: INK, textDecoration: "none" } }, "\u2190 Situs pelanggan")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Booking hari ini", value: stats.today }), /* @__PURE__ */ React.createElement(StatCard, { label: "Menunggu konfirmasi tiba", value: stats.confirmed }), /* @__PURE__ */ React.createElement(StatCard, { label: "Sedang dikerjakan", value: stats.in_progress }), /* @__PURE__ */ React.createElement(StatCard, { label: "Selesai", value: stats.done })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, tabs.map((t) => {
       const on = filter === t.id;
       return /* @__PURE__ */ React.createElement(
         "button",
@@ -86,7 +87,7 @@
           key: t.id,
           type: "button",
           onClick: () => setFilter(t.id),
-          style: { height: 40, padding: "0 14px", borderRadius: 20, border: "2px solid " + (on ? INK : LINE), background: on ? INK : "#FFFFFF", color: on ? "#FFFFFF" : INK, fontSize: 13, fontWeight: 700, cursor: "pointer" }
+          style: { height: 40, padding: "0 14px", borderRadius: 20, border: "2px solid " + (on ? INK : LINE), background: on ? accent : "#FFFFFF", color: INK, fontSize: 13, fontWeight: 700, cursor: "pointer" }
         },
         t.label
       );
@@ -98,7 +99,7 @@
           seedSampleBookings();
           refresh();
         },
-        style: { height: 48, padding: "0 20px", borderRadius: 12, border: "none", background: INK, color: "#FFFFFF", fontSize: 14, fontWeight: 800, cursor: "pointer" }
+        style: { height: 48, padding: "0 20px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
       "Muat data contoh"
     )) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, filtered.map((b) => /* @__PURE__ */ React.createElement(
@@ -106,6 +107,7 @@
       {
         key: b.id,
         b,
+        accent,
         onAdvance: (id, to) => {
           updateBookingStatus(id, to);
           refresh();

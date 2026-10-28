@@ -12,7 +12,6 @@ const GRAY = '#5A6270';
 const LINE = '#DDE1E7';
 const MUTED = '#8791A0';
 const BG = '#F2F3F5';
-const AMBER = '#FFB81C';
 const GREEN = '#1F7A45';
 const RED = '#B42318';
 
@@ -126,6 +125,7 @@ const inputStyle = {
  *  Layar masuk: nomor HP mekanik + PIN
  * ============================================================ */
 function Login({ onLogin }) {
+  const accent = useAccent();
   const [phone, setPhone] = useState('');
   const [pin, setPin] = useState('');
   const [err, setErr] = useState('');
@@ -154,7 +154,7 @@ function Login({ onLogin }) {
       <div style={{ maxWidth: 440, margin: '0 auto', padding: '32px 20px 48px', display: 'flex', flexDirection: 'column', gap: 20, minHeight: '100vh', boxSizing: 'border-box' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: AMBER, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
             <WrenchIcon />
           </div>
           <div style={{ minWidth: 0 }}>
@@ -191,7 +191,7 @@ function Login({ onLogin }) {
           ) : null}
 
           <button type="button" disabled={!canSubmit} onClick={submit}
-            style={{ width: '100%', height: 56, border: 'none', borderRadius: 14, background: canSubmit ? INK : LINE, color: canSubmit ? '#FFFFFF' : GRAY, fontSize: 17, fontWeight: 800, cursor: canSubmit ? 'pointer' : 'default' }}>
+            style={{ width: '100%', height: 56, border: 'none', borderRadius: 14, background: canSubmit ? accent : LINE, color: canSubmit ? INK : GRAY, fontSize: 17, fontWeight: 800, cursor: canSubmit ? 'pointer' : 'default' }}>
             Masuk
           </button>
 
@@ -229,7 +229,7 @@ function Login({ onLogin }) {
 /* ============================================================
  *  Kartu pekerjaan
  * ============================================================ */
-function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim }) {
+function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim, accent }) {
   const total = b.cars.length;
   const doneCars = Array.isArray(b.doneCars) ? b.doneCars : [];
   const done = b.cars.filter((c, i) => doneCars.indexOf(i) !== -1).length;
@@ -300,7 +300,7 @@ function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim }) {
         {unassigned ? (
           <>
             <button type="button" onClick={() => onClaim(b.id)}
-              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: AMBER, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
               Ambil tugas ini
             </button>
             <span style={{ fontSize: 12, color: MUTED }}>Belum ada mekanik yang ditugaskan.</span>
@@ -319,7 +319,7 @@ function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim }) {
 
         {b.status === 'arrived' ? (
           <button type="button" onClick={() => onStart(b.id)}
-            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: INK, color: '#FFFFFF', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
             Mulai dikerjakan
           </button>
         ) : null}
@@ -327,7 +327,7 @@ function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim }) {
         {b.status === 'in_progress' ? (
           <>
             <button type="button" onClick={() => onFinish(b.id, allDone, total - done)}
-              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: allDone ? INK : AMBER, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: allDone ? 1 : 0.78 }}>
               Selesai & serahkan
             </button>
             <span style={{ fontSize: 12, color: GRAY }}>
@@ -350,6 +350,7 @@ function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim }) {
  *  Dasbor mekanik (setelah masuk)
  * ============================================================ */
 function Dashboard({ session, onLogout }) {
+  const accent = useAccent();
   const [bookings, setBookings] = useState(() => loadBookings());
   const [scope, setScope] = useState('mine');
   const [filter, setFilter] = useState('all');
@@ -413,7 +414,7 @@ function Dashboard({ session, onLogout }) {
   const pill = (on) => ({
     height: 40, padding: '0 14px', borderRadius: 20,
     border: '2px solid ' + (on ? INK : LINE),
-    background: on ? INK : '#FFFFFF', color: on ? '#FFFFFF' : INK,
+    background: on ? accent : '#FFFFFF', color: INK,
     fontSize: 13, fontWeight: 700, cursor: 'pointer'
   });
 
@@ -423,7 +424,7 @@ function Dashboard({ session, onLogout }) {
 
         {/* Header + identitas mekanik yang sedang masuk */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: AMBER, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
             <WrenchIcon />
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -478,7 +479,7 @@ function Dashboard({ session, onLogout }) {
             </div>
             {scope === 'mine' ? (
               <button type="button" onClick={() => { seedSampleBookings(); refresh(); }}
-                style={{ height: 48, padding: '0 20px', borderRadius: 12, border: 'none', background: INK, color: '#FFFFFF', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+                style={{ height: 48, padding: '0 20px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
                 Muat data contoh
               </button>
             ) : null}
@@ -489,6 +490,7 @@ function Dashboard({ session, onLogout }) {
               <JobCard
                 key={b.id}
                 b={b}
+                accent={accent}
                 onClaim={claim}
                 onArrive={(id) => { updateBookingStatus(id, 'arrived'); refresh(); }}
                 onStart={(id) => { updateBookingStatus(id, 'in_progress'); refresh(); }}
