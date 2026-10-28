@@ -30,46 +30,6 @@
   const STEPNAME = { 1: "Nomor WhatsApp", 2: "Mobil", 3: "Servis", 4: "Jadwal", 5: "Konfirmasi" };
   const NEXTLABEL = { phone: "Kirim kode", otp: "Verifikasi", cars: "Lanjut", service: "Lanjut", schedule: "Lanjut", confirm: "Konfirmasi booking" };
   const PREV = { otp: "phone", cars: "phone", service: "cars", schedule: "service", confirm: "schedule" };
-  const SERVICES = [
-    { id: "oli", name: "Ganti oli", mins: 45, hint: "Perkiraan selesai \xB145 menit." },
-    { id: "berkala", name: "Servis berkala", mins: 120, hint: "Perkiraan selesai \xB12 jam." },
-    { id: "rem", name: "Cek dan servis rem", mins: 60, hint: "Perkiraan selesai \xB11 jam." },
-    { id: "ac", name: "Servis AC", mins: 90, hint: "Perkiraan selesai \xB11,5 jam." },
-    { id: "keluhan", name: "Ada keluhan", mins: 0, hint: "Mekanik cek dulu (\xB130\u201360 menit), lalu estimasi biaya dan durasi dikirim ke WhatsApp untuk kamu setujui." },
-    { id: "cek", name: "Belum tahu, minta dicek", mins: 0, hint: "Mekanik cek dulu (\xB130\u201360 menit), lalu estimasi biaya dan durasi dikirim ke WhatsApp untuk kamu setujui." }
-  ];
-  const SLOTS = [
-    { t: "08:30", free: 4 },
-    { t: "10:00", free: 2 },
-    { t: "11:30", free: 3 },
-    { t: "13:00", free: 6 },
-    { t: "14:30", free: 5 },
-    { t: "16:00", free: 1 }
-  ];
-  const MECHS = [
-    { id: "auto", name: "Otomatis", sub: "Dipilihkan yang kosong, paling cepat dikerjakan", busy: [] },
-    { id: "budi", name: "Pak Budi", sub: "Kosong mulai 13:00", busy: ["08:30", "10:00", "11:30"] },
-    { id: "andi", name: "Andi", sub: "Penuh jam 14:30", busy: ["14:30"] },
-    { id: "rizal", name: "Rizal", sub: "Kosong semua jam", busy: [] },
-    { id: "dedi", name: "Dedi", sub: "Penuh jam 10:00 dan 13:00", busy: ["10:00", "13:00"] }
-  ];
-  const DAYS = [
-    { dow: "Rab", date: "28 Okt", full: "Rabu, 28 Okt" },
-    { dow: "Kam", date: "29 Okt", full: "Kamis, 29 Okt" },
-    { dow: "Jum", date: "30 Okt", full: "Jumat, 30 Okt" },
-    { dow: "Sab", date: "31 Okt", full: "Sabtu, 31 Okt" },
-    { dow: "Sen", date: "2 Nov", full: "Senin, 2 Nov" }
-  ];
-  const INITIAL_CARS = [
-    { id: "c1", plate: "B 1234 XYZ", model: "Toyota Avanza 2018", last: "Servis terakhir 12 Agu 2026" },
-    { id: "c2", plate: "B 5678 ABC", model: "Honda Brio 2020", last: "Servis terakhir 3 Mei 2026" }
-  ];
-  function slotOk(slot, mech, n) {
-    const sl = SLOTS.find((x) => x.t === slot);
-    if (!sl || sl.free < n) return false;
-    const m = MECHS.find((x) => x.id === mech);
-    return !(m && m.busy.includes(slot));
-  }
   const dig = (v) => String(v || "").replace(/\D/g, "").length;
   const fmt = (m) => m < 60 ? "\xB1" + m + " menit" : "\xB1" + String(m / 60).replace(".", ",") + " jam";
   const scrollTop = () => {
@@ -78,6 +38,23 @@
     } catch (e) {
     }
   };
+  const SERVICES = SERVICE_CATALOG.map((sv) => ({
+    id: sv.id,
+    name: sv.name,
+    mins: sv.mins,
+    hint: sv.mins === 0 ? "Mekanik cek dulu (\xB130\u201360 menit), lalu estimasi biaya dan durasi dikirim ke WhatsApp untuk kamu setujui." : "Perkiraan selesai " + fmt(sv.mins) + "."
+  }));
+  const SLOTS = SLOT_TEMPLATE.map((sl) => ({ t: sl.t }));
+  const MECHS = [{ id: "auto", name: "Otomatis", sub: "Dipilihkan yang kosong, paling cepat dikerjakan" }].concat(MECHANICS.map((m) => ({ id: m.id, name: m.name, sub: "Jadwal mengikuti booking yang masuk" })));
+  const DAYS = upcomingDays(DAYS_SHOWN);
+  const mechNameOf = (id) => id && id !== "auto" ? (MECHANICS.find((m) => m.id === id) || {}).name || "" : "";
+  const slotOkFor = (dateISO, slot, mechId, count) => slotOk(dateISO, slot, mechNameOf(mechId), count);
+  const toCarList = (phoneValue) => loadVehicles(phoneValue).map((c, i) => ({
+    id: "v" + i + "-" + String(c.plate).replace(/\W/g, ""),
+    plate: c.plate,
+    model: c.model,
+    last: c.last
+  }));
   const WrenchIcon = () => /* @__PURE__ */ React.createElement("svg", { width: "24", height: "24", viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" }));
   const BackIcon = () => /* @__PURE__ */ React.createElement("svg", { width: "20", height: "20", viewBox: "0 0 20 20", fill: "none", stroke: "currentColor", strokeWidth: "2", strokeLinecap: "round", strokeLinejoin: "round", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M12 4l-6 6 6 6" }));
   const CheckIcon = ({ size = 16, width = 2.4 }) => /* @__PURE__ */ React.createElement("svg", { width: size, height: size, viewBox: "0 0 16 16", fill: "none", "aria-hidden": "true" }, /* @__PURE__ */ React.createElement("path", { d: "M3 8.5l3.2 3L13 4.5", stroke: "currentColor", strokeWidth: width, strokeLinecap: "round", strokeLinejoin: "round" }));
@@ -106,8 +83,11 @@
     const [otp, setOtp] = useState("");
     const [role, setRole] = useState("owner");
     const [ownerPhone, setOwnerPhone] = useState("");
-    const [cars, setCars] = useState(INITIAL_CARS);
-    const [selected, setSelected] = useState({ c1: true });
+    const [cars, setCars] = useState(() => toCarList(phone));
+    const [selected, setSelected] = useState(() => {
+      const list = toCarList(phone);
+      return list[0] ? { [list[0].id]: true } : {};
+    });
     const [addOpen, setAddOpen] = useState(false);
     const [newPlate, setNewPlate] = useState("");
     const [newModel, setNewModel] = useState("");
@@ -120,6 +100,28 @@
     const [remindOn, setRemindOn] = useState(true);
     const [promoOn, setPromoOn] = useState(false);
     const [code, setCode] = useState("");
+    const [checkin, setCheckin] = useState("");
+    const [savedId, setSavedId] = useState("");
+    const [lookCode, setLookCode] = useState("");
+    const [lookPhone, setLookPhone] = useState("");
+    const [lookErr, setLookErr] = useState("");
+    const [looked, setLooked] = useState(null);
+    const [resDay, setResDay] = useState(0);
+    const [resSlot, setResSlot] = useState("");
+    const [resMsg, setResMsg] = useState("");
+    useEffect(() => {
+      const list = toCarList(phone);
+      setCars(list);
+      setSelected((prev) => {
+        const keep = {};
+        list.forEach((c) => {
+          if (prev[c.id] || Object.keys(prev).length === 0) keep[c.id] = true;
+        });
+        return Object.keys(keep).length ? keep : list[0] ? { [list[0].id]: true } : {};
+      });
+      setSvc({});
+      setSlot("");
+    }, [phone]);
     const driver = role === "driver";
     const selectedCars = cars.filter((c) => selected[c.id]);
     const n = selectedCars.length;
@@ -128,30 +130,35 @@
       otp: otp.length === 4,
       cars: n >= 1 && (!driver || dig(ownerPhone) >= 9),
       service: n >= 1 && selectedCars.every((c) => !!svc[c.id]),
-      schedule: slot !== "" && slotOk(slot, mech, n),
+      schedule: slot !== "" && slotOkFor((DAYS[day] || {}).iso, slot, mech, n),
       confirm: true
     }[step] === true;
     const goNext = () => {
       if (!canNext) return;
       if (step === "confirm") {
-        const mechName2 = mech === "auto" ? "Otomatis (dipilihkan bengkel)" : MECHS.find((m) => m.id === mech).name;
+        const chosenMech = mechNameOf(mech);
+        const dayObj2 = DAYS[day];
         const booking = saveBooking({
           phone: phone.trim(),
           role,
           ownerPhone: driver ? ownerPhone.trim() : "",
           cars: selectedCars.map((c) => {
             const sv = SERVICES.find((x) => x.id === svc[c.id]);
-            return { plate: c.plate, model: c.model, svc: sv ? sv.name : "-" };
+            return { plate: c.plate, model: c.model, svc: sv ? sv.name : "-", mech: chosenMech, done: false };
           }),
           note: note.trim(),
           wait,
-          dayFull: DAYS[day].full,
+          dateISO: dayObj2.iso,
+          dayFull: dayObj2.full,
           slot,
-          mech: mechName2,
+          mech: chosenMech || AUTO_MECH,
           remindOn,
-          promoOn
+          promoOn,
+          actor: "pelanggan"
         });
         setCode(booking.id);
+        setCheckin(booking.checkinCode);
+        setSavedId(booking.id);
         setStep("done");
         scrollTop();
         return;
@@ -181,6 +188,12 @@
       setRemindOn(true);
       setPromoOn(false);
       setCode("");
+      setCheckin("");
+      setSavedId("");
+      setLookErr("");
+      setLooked(null);
+      setResSlot("");
+      setResMsg("");
       scrollTop();
     };
     const toggleCar = (id) => {
@@ -190,17 +203,74 @@
     const saveCar = () => {
       const plate = newPlate.trim().toUpperCase();
       if (!plate) return;
-      const id = "n" + cars.length;
-      setCars((prev) => [...prev, { id, plate, model: newModel.trim() || "Tipe belum diisi", last: "Baru ditambahkan" }]);
-      setSelected((prev) => __spreadProps(__spreadValues({}, prev), { [id]: true }));
+      const res = upsertVehicle(phone, { plate, model: newModel.trim() });
+      if (!res.ok) return;
+      const list = toCarList(phone);
+      const added = list.find((c) => c.plate === res.car.plate);
+      setCars(list);
+      if (added) setSelected((prev) => Object.assign({}, prev, { [added.id]: true }));
       setAddOpen(false);
       setNewPlate("");
       setNewModel("");
       setSlot("");
     };
+    const pickDay = (i) => {
+      setDay(i);
+      setSlot("");
+    };
+    const openLookup = () => {
+      setLookErr("");
+      setResMsg("");
+      setResSlot("");
+      setLookPhone(phone);
+      setStep("status");
+      scrollTop();
+    };
+    const doLookup = () => {
+      const res = findBookingForCustomer(lookCode, lookPhone);
+      if (!res.ok) {
+        setLookErr(res.error);
+        setLooked(null);
+        return;
+      }
+      setLookErr("");
+      setLooked(res.booking);
+      setResDay(0);
+      setResSlot("");
+    };
+    const refreshLooked = (id) => {
+      const fresh = findBooking(id);
+      setLooked(fresh);
+    };
+    const cancelMine = () => {
+      if (!looked) return;
+      const reason = window.prompt("Alasan pembatalan (boleh dikosongkan):", "") || "";
+      const res = closeBooking(looked.id, "cancelled", reason || "Dibatalkan pelanggan", "pelanggan");
+      if (!res.ok) {
+        setResMsg(res.error);
+        return;
+      }
+      setResMsg("Booking dibatalkan.");
+      refreshLooked(looked.id);
+    };
+    const rescheduleMine = () => {
+      if (!looked || !resSlot) {
+        setResMsg("Pilih tanggal dan jam baru dulu.");
+        return;
+      }
+      const dayInfo2 = DAYS[resDay] || DAYS[0];
+      const res = rescheduleBooking(looked.id, dayInfo2.iso, resSlot, "pelanggan");
+      if (!res.ok) {
+        setResMsg(res.error);
+        return;
+      }
+      setResMsg("Jadwal dipindah ke " + dayInfo2.full + " \xB7 " + resSlot + ".");
+      setResSlot("");
+      refreshLooked(looked.id);
+    };
     const pickMech = (m) => {
       setMech(m.id);
-      if (slot && !slotOk(slot, m.id, n)) setSlot("");
+      if (slot && !slotOkFor((DAYS[day] || {}).iso, slot, m.id, n)) setSlot("");
     };
     const stepNo = STEPNO[step] || 5;
     const segs = [1, 2, 3, 4, 5].map((i) => ({ bg: i <= stepNo ? INK : "#CBD1D9" }));
@@ -228,7 +298,7 @@
       return __spreadProps(__spreadValues({}, m), { on, border: on ? INK : LINE, dotBg: on ? INK : "#FFFFFF" });
     });
     const slotList = SLOTS.map((sl) => {
-      const ok = slotOk(sl.t, mech, n);
+      const ok = slotOkFor((DAYS[day] || {}).iso, sl.t, mech, n);
       const on = ok && slot === sl.t;
       return __spreadProps(__spreadValues({}, sl), {
         ok,
@@ -249,10 +319,10 @@
     }
     const multiNote = n + " mobil dikerjakan bersamaan, masing-masing 1 mekanik. Jam yang tampil sudah memperhitungkan jumlah mekanik yang kosong.";
     const dayObj = DAYS[day];
-    const mechObj = MECHS.find((m) => m.id === mech);
-    const mechName = mech === "auto" ? "Otomatis (dipilihkan bengkel)" : mechObj.name;
+    const mechName = mechNameOf(mech) || AUTO_MECH;
     const whenText = dayObj.full + " \xB7 " + slot;
     const waitText = wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal";
+    const dayIso = (DAYS[day] || {}).iso;
     const confirmCars = selectedCars.map((c) => {
       const sv = SERVICES.find((x) => x.id === svc[c.id]);
       return { plate: c.plate, model: c.model, svc: sv ? sv.name : "-" };
@@ -266,11 +336,19 @@
       { n: 4, title: "Bayar dan terima struk", body: "Bayar lewat QRIS di kasir. Struk digital dikirim ke WhatsApp." + (driver ? " Kabar jemput dikirim ke nomor kamu." : "") }
     ];
     const prefsLine = (remindOn ? "Pengingat servis berikutnya aktif." : "Pengingat servis berikutnya tidak aktif.") + (promoOn ? " Info promo aktif." : " Info promo tidak aktif.");
-    const showProgress = step !== "done";
-    const showBack = step !== "phone" && step !== "done";
-    const showFooter = step !== "done";
+    const showProgress = step !== "done" && step !== "status";
+    const showBack = step !== "phone" && step !== "done" && step !== "status";
+    const showFooter = step !== "done" && step !== "status";
     const roleLabel = driver ? "Pengantar" : "Pemilik";
-    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: 844, background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, display: "flex", justifyContent: "center", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 440, minHeight: 844, boxSizing: "border-box", padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, "[Nama Bengkel]"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Booking servis mobil"))), showProgress && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, showBack && /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { minHeight: 844, background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, display: "flex", justifyContent: "center", boxSizing: "border-box" } }, /* @__PURE__ */ React.createElement("div", { style: { width: "100%", maxWidth: 440, minHeight: 844, boxSizing: "border-box", padding: "20px 20px 28px", display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: "flex", alignItems: "center", justifyContent: "center", flex: "none" } }, /* @__PURE__ */ React.createElement(WrenchIcon, null)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2, flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, "[Nama Bengkel]"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Booking servis mobil")), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: openLookup,
+        style: { height: 36, padding: "0 12px", borderRadius: 18, border: "2px solid " + LINE, background: "#FFFFFF", color: INK, fontSize: 12, fontWeight: 700, cursor: "pointer", flex: "none" }
+      },
+      "Cek status"
+    )), showProgress && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, showBack && /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -300,7 +378,7 @@
         onChange: (e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 4)),
         style: { width: "100%", height: 64, boxSizing: "border-box", padding: "0 16px", border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: INK, fontSize: 28, fontWeight: 700, letterSpacing: 12, textAlign: "center" }
       }
-    )), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Catatan prototipe: ketik 4 angka apa saja, misalnya 1234.")), step === "cars" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Mobil mana yang diservis?"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Nomor dikenali. Pilih satu atau lebih mobil yang pernah kamu servis di sini.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, cars.map((c) => {
+    )), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Catatan prototipe: ketik 4 angka apa saja, misalnya 1234.")), step === "cars" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Mobil mana yang diservis?"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Nomor dikenali. Pilih satu atau lebih mobil yang pernah kamu servis di sini.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, cars.length === 0 && /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 12, fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Belum ada mobil tersimpan untuk nomor ini. Tambahkan mobil dulu \u2014 data tersimpan per nomor WhatsApp."), cars.map((c) => {
       const on = !!selected[c.id];
       return /* @__PURE__ */ React.createElement(
         "button",
@@ -415,7 +493,7 @@
         key: d.i,
         type: "button",
         "aria-pressed": d.on,
-        onClick: () => setDay(d.i),
+        onClick: () => pickDay(d.i),
         style: { flex: 1, minWidth: 0, minHeight: 60, boxSizing: "border-box", padding: "6px 2px", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 2, background: d.bg, color: d.fg, border: "2px solid " + d.border, borderRadius: 12, cursor: "pointer" }
       },
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13 } }, d.dow),
@@ -463,7 +541,19 @@
       },
       /* @__PURE__ */ React.createElement(BoxCheck, { on: promoOn }),
       /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 700 } }, "Boleh kirim info promo"), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, "Opsional. Bisa dimatikan kapan saja."))
-    )), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Biaya dan durasi final dikirim setelah mobil dicek. Pekerjaan tambahan hanya dilakukan setelah kamu setuju lewat WhatsApp.")), step === "done" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 52, height: 52, borderRadius: 26, background: "#1F7A45", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 26, width: 2 })), /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Booking berhasil"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, whenText, ". Konfirmasi sudah dikirim ke WhatsApp ", phone, ".")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode booking"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 3 } }, code), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, carsLine)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pesan WhatsApp yang kamu terima"), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#DCF5E1", borderRadius: "14px 14px 14px 4px", fontSize: 14, lineHeight: 1.6, color: INK } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, "[Nama Bengkel] \xB7 Booking ", code, " dikonfirmasi"), /* @__PURE__ */ React.createElement("div", null, whenText), /* @__PURE__ */ React.createElement("div", null, carsLine), /* @__PURE__ */ React.createElement("div", null, "Mekanik: ", mechName))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Setelah ini"), nextSteps.map((st) => /* @__PURE__ */ React.createElement("div", { key: st.n, style: { display: "flex", gap: 12, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, flex: "none", borderRadius: 13, background: accent, color: INK, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } }, st.n), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, st.title), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, st.body))))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, prefsLine), /* @__PURE__ */ React.createElement(
+    )), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Biaya dan durasi final dikirim setelah mobil dicek. Pekerjaan tambahan hanya dilakukan setelah kamu setuju lewat WhatsApp.")), step === "done" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 14 } }, /* @__PURE__ */ React.createElement("span", { style: { width: 52, height: 52, borderRadius: 26, background: "#1F7A45", color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 26, width: 2 })), /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Booking berhasil"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, whenText, ". Konfirmasi sudah dikirim ke WhatsApp ", phone, ".")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode booking"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 3 } }, code), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, carsLine)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kode check-in (tunjukkan di kasir saat tiba)"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 28, fontWeight: 800, letterSpacing: 6 } }, checkin), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Petugas memakai kode ini untuk mencatat kedatanganmu. Tanpa kode, booking tidak bisa ditandai tiba.")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pesan WhatsApp yang kamu terima"), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#DCF5E1", borderRadius: "14px 14px 14px 4px", fontSize: 14, lineHeight: 1.6, color: INK } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700 } }, "[Nama Bengkel] \xB7 Booking ", code, " dikonfirmasi"), /* @__PURE__ */ React.createElement("div", null, whenText), /* @__PURE__ */ React.createElement("div", null, carsLine), /* @__PURE__ */ React.createElement("div", null, "Mekanik: ", mechName))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Setelah ini"), nextSteps.map((st) => /* @__PURE__ */ React.createElement("div", { key: st.n, style: { display: "flex", gap: 12, alignItems: "flex-start" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 26, height: 26, flex: "none", borderRadius: 13, background: accent, color: INK, fontSize: 13, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" } }, st.n), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, st.title), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, st.body))))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, prefsLine), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          setLookCode(code);
+          setLookPhone(phone);
+          openLookup();
+        },
+        style: { width: "100%", height: 56, border: "none", borderRadius: 14, background: accent, color: INK, fontSize: 16, fontWeight: 800, cursor: "pointer" }
+      },
+      "Cek status booking"
+    ), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
@@ -471,7 +561,114 @@
         style: { width: "100%", height: 56, border: "2px solid " + INK, borderRadius: 14, background: "#FFFFFF", color: INK, fontSize: 16, fontWeight: 800, cursor: "pointer" }
       },
       "Buat booking baru"
-    )), showFooter && /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto", paddingTop: 8 } }, /* @__PURE__ */ React.createElement(
+    )), step === "status" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 12 } }, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        "aria-label": "Kembali",
+        onClick: () => {
+          setStep("phone");
+          setLooked(null);
+          scrollTop();
+        },
+        style: { width: 44, height: 44, flex: "none", borderRadius: 12, border: "1.5px solid " + MUTED, background: "#FFFFFF", color: INK, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }
+      },
+      /* @__PURE__ */ React.createElement(BackIcon, null)
+    ), /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 24, lineHeight: 1.2, fontWeight: 800 } }, "Cek status booking")), !looked && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, lineHeight: 1.5, color: GRAY } }, "Masukkan kode booking dan nomor WhatsApp yang dipakai saat booking."), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "look-code", style: { fontSize: 14, fontWeight: 700 } }, "Kode booking"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        id: "look-code",
+        type: "text",
+        placeholder: "BK-0271",
+        value: lookCode,
+        onChange: (e) => {
+          setLookCode(e.target.value.toUpperCase());
+          setLookErr("");
+        },
+        style: { width: "100%", height: 52, boxSizing: "border-box", padding: "0 16px", border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: INK, fontSize: 16, letterSpacing: 1 }
+      }
+    )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "look-phone", style: { fontSize: 14, fontWeight: 700 } }, "Nomor WhatsApp"), /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        id: "look-phone",
+        type: "tel",
+        placeholder: "08xx xxxx xxxx",
+        value: lookPhone,
+        onChange: (e) => {
+          setLookPhone(e.target.value);
+          setLookErr("");
+        },
+        style: { width: "100%", height: 52, boxSizing: "border-box", padding: "0 16px", border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: INK, fontSize: 16 }
+      }
+    )), lookErr ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: "#B42318", background: "#FDE8E6", borderRadius: 10, padding: "10px 12px" } }, lookErr) : null, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: doLookup,
+        style: { width: "100%", height: 52, border: "none", borderRadius: 12, background: accent, color: INK, fontSize: 16, fontWeight: 800, cursor: "pointer" }
+      },
+      "Lihat status"
+    )), looked && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 20, fontWeight: 800, letterSpacing: 1 } }, looked.id), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 800, padding: "4px 10px", borderRadius: 999, background: (BOOKING_STATUS[looked.status] || {}).tone === "green" ? "#DCF5E1" : looked.status === "cancelled" || looked.status === "no_show" ? "#FDE8E6" : "#E7F0FD", color: looked.status === "done" ? "#165C34" : looked.status === "cancelled" || looked.status === "no_show" ? "#B42318" : "#1D4E89" } }, statusLabel(looked.status))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 700 } }, looked.dayFull, " \xB7 ", looked.slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, looked.wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal", " \xB7 Mekanik: ", mechanicSummary(looked)), looked.status === "confirmed" && /* @__PURE__ */ React.createElement("div", { style: { marginTop: 4, padding: "10px 12px", background: BG, borderRadius: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Kode check-in"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 22, fontWeight: 800, letterSpacing: 5 } }, looked.checkinCode))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Progres per mobil"), looked.cars.map((c) => /* @__PURE__ */ React.createElement("div", { key: c.plate, style: { display: "flex", alignItems: "center", gap: 10, background: BG, borderRadius: 10, padding: "8px 12px" } }, /* @__PURE__ */ React.createElement("span", { style: { width: 22, height: 22, flex: "none", borderRadius: 11, background: c.done ? "#1F7A45" : "#FFFFFF", border: "2px solid " + (c.done ? "#1F7A45" : MUTED), color: "#FFFFFF", display: "flex", alignItems: "center", justifyContent: "center" } }, c.done ? /* @__PURE__ */ React.createElement(CheckIcon, { size: 12, width: 2.6 }) : null), /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 800, textDecoration: c.done ? "line-through" : "none" } }, c.plate), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY } }, c.svc, " \xB7 ", c.mech || "mekanik belum ditugaskan"))))), looked.audit.length > 0 && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Riwayat"), looked.audit.slice(0, 5).map((a, i) => /* @__PURE__ */ React.createElement("div", { key: i, style: { display: "flex", flexDirection: "column", gap: 1 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, a.action), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY } }, fmtDateID(a.at), " \xB7 ", a.actor, a.note ? " \xB7 " + a.note : "")))), (looked.status === "confirmed" || looked.status === "arrived") && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 800 } }, "Ubah jadwal"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, DAYS.map((d, i) => /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        key: d.iso,
+        type: "button",
+        onClick: () => {
+          setResDay(i);
+          setResSlot("");
+          setResMsg("");
+        },
+        style: { flex: "1 1 auto", minHeight: 48, padding: "4px 8px", borderRadius: 10, border: "2px solid " + (resDay === i ? INK : LINE), background: resDay === i ? accent : "#FFFFFF", color: INK, fontSize: 12, fontWeight: 700, cursor: "pointer" }
+      },
+      d.dow,
+      " ",
+      d.date
+    ))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 6, flexWrap: "wrap" } }, SLOTS.map((sl) => {
+      const ok = slotOk((DAYS[resDay] || {}).iso, sl.t, "", looked.cars.length, looked.id);
+      const on = resSlot === sl.t;
+      return /* @__PURE__ */ React.createElement(
+        "button",
+        {
+          key: sl.t,
+          type: "button",
+          disabled: !ok,
+          onClick: () => {
+            setResSlot(sl.t);
+            setResMsg("");
+          },
+          style: { flex: "1 1 30%", minHeight: 48, padding: "4px", borderRadius: 10, border: "2px solid " + (on ? INK : ok ? MUTED : LINE), background: on ? accent : ok ? "#FFFFFF" : "#EEF0F3", color: ok ? INK : GRAY, fontSize: 13, fontWeight: 700, cursor: ok ? "pointer" : "default" }
+        },
+        sl.t
+      );
+    })), resMsg ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, resMsg) : null, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: rescheduleMine,
+        style: { width: "100%", height: 48, border: "none", borderRadius: 12, background: accent, color: INK, fontSize: 15, fontWeight: 800, cursor: "pointer" }
+      },
+      "Simpan jadwal baru"
+    ), /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: cancelMine,
+        style: { width: "100%", height: 48, border: "1.5px solid " + MUTED, borderRadius: 12, background: "#FFFFFF", color: "#B42318", fontSize: 15, fontWeight: 700, cursor: "pointer" }
+      },
+      "Batalkan booking"
+    )), resMsg && !(looked.status === "confirmed" || looked.status === "arrived") ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, resMsg) : null, /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => {
+          setLooked(null);
+          setLookCode("");
+          setLookErr("");
+        },
+        style: { width: "100%", height: 48, border: "none", borderRadius: 12, background: "#FFFFFF", border: "1px solid " + LINE, color: INK, fontSize: 14, fontWeight: 700, cursor: "pointer" }
+      },
+      "Cek booking lain"
+    ))), showFooter && /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto", paddingTop: 8 } }, /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",

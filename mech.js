@@ -14,27 +14,10 @@
     green: { bg: "#DCF5E1", fg: "#165C34" },
     red: { bg: "#FDE8E6", fg: "#B42318" }
   };
-  const AUTO_MECH = "Otomatis (dipilihkan bengkel)";
   const SESSION_KEY = "bengkel.mech.session.v1";
-  const MECH_ACCOUNTS = [
-    { id: "budi", name: "Pak Budi", phone: "0812 3456 0001", pin: "1111" },
-    { id: "andi", name: "Andi", phone: "0812 3456 0002", pin: "2222" },
-    { id: "rizal", name: "Rizal", phone: "0812 3456 0003", pin: "3333" },
-    { id: "dedi", name: "Dedi", phone: "0812 3456 0004", pin: "4444" }
-  ];
-  const SVC_MINS = {
-    "Ganti oli": 45,
-    "Servis berkala": 120,
-    "Cek dan servis rem": 60,
-    "Servis AC": 90
-  };
+  const MECH_ACCOUNTS = MECHANICS;
   const STATUS_ORDER = { in_progress: 0, arrived: 1, confirmed: 2, done: 3 };
-  const durText = (svc) => {
-    const m = SVC_MINS[svc];
-    if (!m) return "cek dulu \xB130\u201360 menit";
-    return m < 60 ? "\xB1" + m + " menit" : "\xB1" + String(m / 60).replace(".", ",") + " jam";
-  };
-  const normPhone = (v) => String(v || "").replace(/\D/g, "").replace(/^62/, "0");
+  const ACTOR = "mekanik";
   function loadSession() {
     try {
       const raw = localStorage.getItem(SESSION_KEY);
@@ -157,66 +140,122 @@
       showDemo ? "Sembunyikan akun demo" : "Lihat akun demo (prototipe)"
     ), showDemo ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, fontSize: 13, color: GRAY } }, MECH_ACCOUNTS.map((a) => /* @__PURE__ */ React.createElement("div", { key: a.id, style: { display: "flex", justifyContent: "space-between", gap: 12 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700, color: INK } }, a.name), /* @__PURE__ */ React.createElement("span", null, a.phone, " \xB7 PIN ", a.pin)))) : null), /* @__PURE__ */ React.createElement("div", { style: { marginTop: "auto", display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "\u2190 Panel admin"), /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Situs pelanggan \u2192"))));
   }
-  function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim, accent }) {
+  function JobCard({ b, accent, me, onChanged }) {
+    const [code, setCode] = useState("");
+    const [msg, setMsg] = useState("");
+    const [err, setErr] = useState("");
     const total = b.cars.length;
-    const doneCars = Array.isArray(b.doneCars) ? b.doneCars : [];
-    const done = b.cars.filter((c, i) => doneCars.indexOf(i) !== -1).length;
+    const done = carsDone(b);
     const allDone = done === total;
     const pct = total ? Math.round(done / total * 100) : 0;
-    const unassigned = b.mech === AUTO_MECH;
-    return /* @__PURE__ */ React.createElement("div", { style: { background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800, letterSpacing: 1 } }, b.id), /* @__PURE__ */ React.createElement(StatusChip, { status: b.status }), unassigned ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 800, color: TONE.amber.fg, background: TONE.amber.bg, borderRadius: 999, padding: "4px 10px" } }, "Belum ditugaskan") : null), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, fmtDateID(b.createdAt), " WIB")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Jadwal"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.dayFull, " \xB7 ", b.slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal", " \xB7 Mekanik: ", b.mech)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Pelanggan"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.role === "driver" ? "Pengantar" : "Pemilik", " \xB7 ", b.phone), b.ownerPhone ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pemilik (persetujuan biaya): ", b.ownerPhone) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, total, " mobil \xB7 ", done, " selesai"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, b.cars.map((c, i) => {
-      const on = doneCars.indexOf(i) !== -1;
+    const myCars = b.cars.filter((c) => c.mech === me).length;
+    const openCars = mineUnassigned(b).length;
+    const run = (result, okText) => {
+      if (!result || result.ok === false) {
+        setErr(result && result.error || "Aksi gagal.");
+        setMsg("");
+        return false;
+      }
+      setErr("");
+      setMsg(okText || "");
+      onChanged();
+      return true;
+    };
+    const verify = () => {
+      if (run(checkInBooking(b.id, code, ACTOR + ":" + me), "Check-in terverifikasi, status menjadi Tiba.")) setCode("");
+    };
+    const claim = () => {
+      let taken = 0;
+      mineUnassigned(b).forEach((unassignedCar, idx) => {
+        const realIndex = b.cars.indexOf(unassignedCar);
+        const res = assignMechanic(b.id, realIndex, me, ACTOR + ":" + me);
+        if (res.ok) taken += 1;
+      });
+      if (!taken) {
+        setErr("Tidak ada mobil yang bisa diambil (mekanik lain mungkin sudah menanganinya).");
+        return;
+      }
+      setErr("");
+      setMsg(taken + " mobil diambil untuk " + me + ".");
+      onChanged();
+    };
+    const finish = () => {
+      const missing = total - done;
+      if (!allDone && !window.confirm("Masih ada " + missing + " mobil yang belum ditandai selesai. Tetap tandai booking " + b.id + " selesai?")) return;
+      run(updateBookingStatus(b.id, "done", ACTOR + ":" + me), "Booking " + b.id + " selesai.");
+    };
+    return /* @__PURE__ */ React.createElement("div", { style: { background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800, letterSpacing: 1 } }, b.id), /* @__PURE__ */ React.createElement(StatusChip, { status: b.status }), openCars > 0 ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 800, color: TONE.amber.fg, background: TONE.amber.bg, borderRadius: 999, padding: "4px 10px" } }, openCars, " mobil belum ada mekanik") : null), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, b.dayFull, " \xB7 ", b.slot)), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Jadwal"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.dayFull, " \xB7 ", b.slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal", " \xB7 ", total, " mobil \xB7 ", myCars, " untukmu")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Pelanggan"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.role === "driver" ? "Pengantar" : "Pemilik", " \xB7 ", b.phone), b.ownerPhone ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pemilik (persetujuan biaya): ", b.ownerPhone) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, done, " dari ", total, " mobil selesai"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, b.cars.map((c, i) => {
+      const mine = c.mech === me;
+      const canToggle = mine && b.status === "in_progress";
       return /* @__PURE__ */ React.createElement(
         "button",
         {
-          key: i,
+          key: c.plate + i,
           type: "button",
-          onClick: () => onToggleCar(b.id, i),
-          disabled: b.status === "done",
-          style: { display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: BG, borderRadius: 10, padding: "8px 12px", border: "none", cursor: b.status === "done" ? "default" : "pointer", font: "inherit", color: INK }
+          onClick: () => canToggle && run(setCarDone(b.id, i, !c.done, ACTOR + ":" + me), c.done ? c.plate + " dibuka lagi." : c.plate + " ditandai selesai."),
+          disabled: !canToggle,
+          style: { display: "flex", alignItems: "center", gap: 12, width: "100%", textAlign: "left", background: BG, borderRadius: 10, padding: "8px 12px", border: mine ? "2px solid " + accent : "2px solid transparent", cursor: canToggle ? "pointer" : "default", font: "inherit", color: INK }
         },
-        /* @__PURE__ */ React.createElement(CarCheck, { on }),
-        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800, textDecoration: on ? "line-through" : "none", color: on ? GRAY : INK } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, " \xB7 ", c.model)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, c.svc, " \xB7 ", durText(c.svc)))
+        /* @__PURE__ */ React.createElement(CarCheck, { on: c.done }),
+        /* @__PURE__ */ React.createElement("div", { style: { flex: 1, minWidth: 0 } }, /* @__PURE__ */ React.createElement("div", null, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800, textDecoration: c.done ? "line-through" : "none", color: c.done ? GRAY : INK } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, " \xB7 ", c.model)), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, c.svc, " \xB7 ", durText(c.svc), " \xB7 ", c.mech ? c.mech : "belum ada mekanik")),
+        canToggle ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: GRAY, whiteSpace: "nowrap" } }, c.done ? "selesai" : "tandai selesai") : null
       );
-    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, height: 6, borderRadius: 3, background: LINE, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: pct + "%", height: "100%", background: GREEN, transition: "width .2s ease" } })), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 800, color: GRAY, whiteSpace: "nowrap" } }, done, "/", total, " mobil")), b.note ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY, background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 10, padding: "8px 12px" } }, "Catatan pelanggan: ", b.note) : null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } }, unassigned ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+    })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { flex: 1, height: 6, borderRadius: 3, background: LINE, overflow: "hidden" } }, /* @__PURE__ */ React.createElement("div", { style: { width: pct + "%", height: "100%", background: GREEN, transition: "width .2s ease" } })), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, fontWeight: 800, color: GRAY, whiteSpace: "nowrap" } }, done, "/", total, " mobil")), b.status === "cancelled" || b.status === "no_show" ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: "8px 12px" } }, statusLabel(b.status), b.closedReason ? " \xB7 " + b.closedReason : "") : null, b.note ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY, background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 10, padding: "8px 12px" } }, "Catatan pelanggan: ", b.note) : null, b.status === "confirmed" ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8, padding: 12, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, fontWeight: 700 } }, "Kode check-in pelanggan (4 angka)"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        type: "text",
+        inputMode: "numeric",
+        maxLength: 4,
+        placeholder: "0000",
+        value: code,
+        onChange: (e) => {
+          setCode(e.target.value.replace(/\D/g, "").slice(0, 4));
+          setErr("");
+        },
+        style: { width: 110, height: 44, boxSizing: "border-box", textAlign: "center", letterSpacing: 6, fontSize: 18, fontWeight: 700, border: "1.5px solid " + MUTED, borderRadius: 10, background: "#FFFFFF", color: INK }
+      }
+    ), /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
-        onClick: () => onClaim(b.id),
+        onClick: verify,
         style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
-      "Ambil tugas ini"
-    ), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Belum ada mekanik yang ditugaskan.")) : null, b.status === "confirmed" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+      "Verifikasi kedatangan"
+    ))) : null, err ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: "8px 12px" } }, err) : null, msg ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: "8px 12px" } }, msg) : null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" } }, openCars > 0 && b.status !== "done" ? /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
-        onClick: () => onArrive(b.id),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "2px solid " + INK, background: "#FFFFFF", color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
-      },
-      "Catat kedatangan"
-    ), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Mobil belum tiba di bengkel.")) : null, b.status === "arrived" ? /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: () => onStart(b.id),
+        onClick: claim,
         style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
+      },
+      "Ambil ",
+      openCars,
+      " mobil ini"
+    ) : null, b.status === "arrived" && myCars > 0 ? /* @__PURE__ */ React.createElement(
+      "button",
+      {
+        type: "button",
+        onClick: () => run(updateBookingStatus(b.id, "in_progress", ACTOR + ":" + me), "Pekerjaan dimulai."),
+        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: INK, color: "#FFFFFF", fontSize: 14, fontWeight: 800, cursor: "pointer" }
       },
       "Mulai dikerjakan"
-    ) : null, b.status === "in_progress" ? /* @__PURE__ */ React.createElement(React.Fragment, null, /* @__PURE__ */ React.createElement(
+    ) : null, b.status === "in_progress" && myCars > 0 ? /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
-        onClick: () => onFinish(b.id, allDone, total - done),
-        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer", opacity: allDone ? 1 : 0.78 }
+        onClick: finish,
+        style: { height: 44, padding: "0 16px", borderRadius: 10, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer", opacity: allDone ? 1 : 0.8 }
       },
       "Selesai & serahkan"
-    ), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: GRAY } }, allDone ? "Semua mobil sudah ditandai selesai." : total - done + " mobil belum ditandai selesai.")) : null, b.status === "done" ? /* @__PURE__ */ React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: GREEN } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 16 }), " Selesai ", b.updatedAt ? fmtDateID(b.updatedAt) : "") : null));
+    ) : null, b.status === "done" ? /* @__PURE__ */ React.createElement("span", { style: { display: "inline-flex", alignItems: "center", gap: 8, fontSize: 13, fontWeight: 700, color: GREEN } }, /* @__PURE__ */ React.createElement(CheckIcon, { size: 16 }), " Selesai ", b.updatedAt ? fmtDateID(b.updatedAt) : "") : null, b.audit && b.audit.length > 0 ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED, marginLeft: "auto" } }, b.audit.length, " perubahan tercatat") : null));
   }
   function Dashboard({ session, onLogout }) {
     const accent = useAccent();
     const [bookings, setBookings] = useState(() => loadBookings());
     const [scope, setScope] = useState("mine");
     const [filter, setFilter] = useState("all");
+    const [notice, setNotice] = useState("");
     const refresh = () => setBookings(loadBookings());
     useEffect(() => {
       const onSync = () => setBookings(loadBookings());
@@ -227,15 +266,15 @@
         window.removeEventListener("storage", onSync);
       };
     }, []);
-    const active = bookings.filter((b) => b.status !== "cancelled");
-    const isMine = (b) => b.mech === session.name;
-    const isOpen = (b) => b.mech === AUTO_MECH;
-    const inScope = scope === "mine" ? active.filter(isMine) : active.filter(isOpen);
+    const current = bookings.filter((b) => b.status !== "cancelled" && b.status !== "no_show");
+    const isMine = (b) => mechHasBooking(b, session.name);
+    const isOpen = (b) => isUnassigned(b) && b.status !== "done";
+    const inScope = scope === "mine" ? current.filter(isMine) : current.filter(isOpen);
     const stats = {
-      active: active.filter(isMine).filter((b) => b.status !== "done").length,
-      arrived: active.filter(isMine).filter((b) => b.status === "arrived").length,
-      in_progress: active.filter(isMine).filter((b) => b.status === "in_progress").length,
-      done: active.filter(isMine).filter((b) => b.status === "done").length
+      active: current.filter(isMine).filter((b) => b.status !== "done").length,
+      arrived: current.filter(isMine).filter((b) => b.status === "arrived").length,
+      in_progress: current.filter(isMine).filter((b) => b.status === "in_progress").length,
+      done: bookings.filter(isMine).filter((b) => b.status === "done").length
     };
     const filtered = (filter === "all" ? inScope : inScope.filter((b) => b.status === filter)).slice().sort((a, b) => STATUS_ORDER[a.status] - STATUS_ORDER[b.status] || String(a.slot).localeCompare(String(b.slot)));
     const tabs = [
@@ -245,22 +284,6 @@
       { id: "confirmed", label: "Belum tiba (" + inScope.filter((b) => b.status === "confirmed").length + ")" },
       { id: "done", label: "Selesai (" + inScope.filter((b) => b.status === "done").length + ")" }
     ];
-    const toggleCar = (id, index) => {
-      const b = loadBookings().find((x) => x.id === id);
-      if (!b) return;
-      const doneCars = Array.isArray(b.doneCars) ? b.doneCars.slice() : [];
-      const at = doneCars.indexOf(index);
-      if (at === -1) doneCars.push(index);
-      else doneCars.splice(at, 1);
-      doneCars.sort((x, y) => x - y);
-      updateBooking(id, { doneCars });
-      refresh();
-    };
-    const claim = (id) => {
-      updateBooking(id, { mech: session.name });
-      setScope("mine");
-      refresh();
-    };
     const pill = (on) => ({
       height: 40,
       padding: "0 14px",
@@ -283,43 +306,22 @@
     )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Pekerjaan"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
       setScope("mine");
       setFilter("all");
-    }, style: pill(scope === "mine") }, "Tugas saya (", active.filter(isMine).length, ")"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
+    }, style: pill(scope === "mine") }, "Tugas saya (", current.filter(isMine).length, ")"), /* @__PURE__ */ React.createElement("button", { type: "button", onClick: () => {
       setScope("open");
       setFilter("all");
-    }, style: pill(scope === "open") }, "Belum ditugaskan (", active.filter(isOpen).length, ")"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Tugas aktif", value: stats.active }), /* @__PURE__ */ React.createElement(StatCard, { label: "Menunggu dikerjakan", value: stats.arrived }), /* @__PURE__ */ React.createElement(StatCard, { label: "Sedang dikerjakan", value: stats.in_progress }), /* @__PURE__ */ React.createElement(StatCard, { label: "Selesai", value: stats.done })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, tabs.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, type: "button", onClick: () => setFilter(t.id), style: pill(filter === t.id) }, t.label))), filtered.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "48px 24px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 16, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800 } }, scope === "mine" ? "Belum ada pekerjaan untukmu" : "Tidak ada pekerjaan yang belum ditugaskan"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY, lineHeight: 1.6, maxWidth: 420 } }, scope === "mine" ? "Booking dari situs pelanggan yang ditugaskan ke " + session.name + " akan muncul otomatis di sini. Kamu juga bisa mengambil pekerjaan yang belum ditugaskan." : "Semua booking sudah punya mekanik. Cek tab Tugas saya untuk melihat pekerjaanmu."), scope === "mine" ? /* @__PURE__ */ React.createElement(
-      "button",
-      {
-        type: "button",
-        onClick: () => {
-          seedSampleBookings();
-          refresh();
-        },
-        style: { height: 48, padding: "0 20px", borderRadius: 12, border: "none", background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: "pointer" }
-      },
-      "Muat data contoh"
-    ) : null) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, filtered.map((b) => /* @__PURE__ */ React.createElement(
+    }, style: pill(scope === "open") }, "Belum ada mekanik (", current.filter(isOpen).length, ")"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(StatCard, { label: "Tugas aktif", value: stats.active }), /* @__PURE__ */ React.createElement(StatCard, { label: "Menunggu dikerjakan", value: stats.arrived }), /* @__PURE__ */ React.createElement(StatCard, { label: "Sedang dikerjakan", value: stats.in_progress }), /* @__PURE__ */ React.createElement(StatCard, { label: "Selesai", value: stats.done })), notice ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: "8px 12px" } }, notice) : null, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap" } }, tabs.map((t) => /* @__PURE__ */ React.createElement("button", { key: t.id, type: "button", onClick: () => setFilter(t.id), style: pill(filter === t.id) }, t.label))), filtered.length === 0 ? /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "48px 24px", background: "#FFFFFF", border: "1px dashed " + MUTED, borderRadius: 16, textAlign: "center" } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 16, fontWeight: 800 } }, scope === "mine" ? "Belum ada pekerjaan untukmu" : "Tidak ada mobil tanpa mekanik"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY, lineHeight: 1.6, maxWidth: 440 } }, scope === "mine" ? "Admin menugaskan mobil kepadamu dari panel admin. Kamu juga bisa mengambil mobil yang belum punya mekanik." : "Semua mobil sudah punya mekanik. Cek tab Tugas saya untuk melihat pekerjaanmu."), /* @__PURE__ */ React.createElement("a", { href: "admin.html", style: { fontSize: 13, fontWeight: 800, color: INK } }, "Buka panel admin")) : /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 14 } }, filtered.map((b) => /* @__PURE__ */ React.createElement(
       JobCard,
       {
         key: b.id,
         b,
         accent,
-        onClaim: claim,
-        onArrive: (id) => {
-          updateBookingStatus(id, "arrived");
+        me: session.name,
+        onChanged: () => {
+          setNotice("");
           refresh();
-        },
-        onStart: (id) => {
-          updateBookingStatus(id, "in_progress");
-          refresh();
-        },
-        onFinish: (id, allDone, left) => {
-          if (!allDone && !confirm("Masih ada " + left + " mobil yang belum ditandai selesai. Tetap tandai booking " + id + " selesai?")) return;
-          updateBookingStatus(id, "done");
-          refresh();
-        },
-        onToggleCar: toggleCar
+        }
       }
-    ))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: MUTED, textAlign: "center" } }, "Data tersimpan di browser ini (localStorage) dan sama dengan yang dipakai panel admin. Untuk produksi, ganti lapisan data di ", /* @__PURE__ */ React.createElement("b", null, "booking.js"), " dengan API backend.")));
+    ))), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: MUTED, textAlign: "center" } }, "Setiap aksi tercatat atas namamu (audit trail). Data tersimpan di browser ini (localStorage); untuk produksi, ganti lapisan data di ", /* @__PURE__ */ React.createElement("b", null, "booking.js"), " dengan API backend.", " ", /* @__PURE__ */ React.createElement("a", { href: "index.html", style: { color: GRAY, fontWeight: 700 } }, "Situs pelanggan \u2192"))));
   }
   function Mech() {
     const [session, setSession] = useState(() => loadSession());

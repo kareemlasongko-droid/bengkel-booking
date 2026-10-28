@@ -23,36 +23,13 @@ const TONE = {
   red:    { bg: '#FDE8E6', fg: '#B42318' }
 };
 
-/* Booking dengan mekanik "Otomatis" belum ditugaskan ke siapa pun */
-const AUTO_MECH = 'Otomatis (dipilihkan bengkel)';
+/* Akun mekanik, durasi servis, dan "otomatis" berasal dari booking.js
+   (satu sumber dengan situs pelanggan & panel admin). */
 const SESSION_KEY = 'bengkel.mech.session.v1';
-
-/* Akun mekanik — nomor HP masing-masing + PIN 4 angka.
-   Samakan `name` dengan MECHS di src/app.jsx agar tugasnya cocok. */
-const MECH_ACCOUNTS = [
-  { id: 'budi',  name: 'Pak Budi', phone: '0812 3456 0001', pin: '1111' },
-  { id: 'andi',  name: 'Andi',     phone: '0812 3456 0002', pin: '2222' },
-  { id: 'rizal', name: 'Rizal',    phone: '0812 3456 0003', pin: '3333' },
-  { id: 'dedi',  name: 'Dedi',     phone: '0812 3456 0004', pin: '4444' }
-];
-
-/* Durasi per servis — sama dengan SERVICES di src/app.jsx */
-const SVC_MINS = {
-  'Ganti oli': 45,
-  'Servis berkala': 120,
-  'Cek dan servis rem': 60,
-  'Servis AC': 90
-};
+const MECH_ACCOUNTS = MECHANICS;
 
 const STATUS_ORDER = { in_progress: 0, arrived: 1, confirmed: 2, done: 3 };
-
-const durText = (svc) => {
-  const m = SVC_MINS[svc];
-  if (!m) return 'cek dulu ±30–60 menit';
-  return m < 60 ? '±' + m + ' menit' : '±' + String(m / 60).replace('.', ',') + ' jam';
-};
-
-const normPhone = (v) => String(v || '').replace(/\D/g, '').replace(/^62/, '0');
+const ACTOR = 'mekanik';
 
 /* ---------- sesi login per HP mekanik ---------- */
 function loadSession() {
@@ -229,55 +206,100 @@ function Login({ onLogin }) {
 /* ============================================================
  *  Kartu pekerjaan
  * ============================================================ */
-function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim, accent }) {
+function JobCard({ b, accent, me, onChanged }) {
+  const [code, setCode] = useState('');
+  const [msg, setMsg] = useState('');
+  const [err, setErr] = useState('');
+
   const total = b.cars.length;
-  const doneCars = Array.isArray(b.doneCars) ? b.doneCars : [];
-  const done = b.cars.filter((c, i) => doneCars.indexOf(i) !== -1).length;
+  const done = carsDone(b);
   const allDone = done === total;
   const pct = total ? Math.round((done / total) * 100) : 0;
-  const unassigned = b.mech === AUTO_MECH;
+  const myCars = b.cars.filter((c) => c.mech === me).length;
+  const openCars = mineUnassigned(b).length;
+
+  const run = (result, okText) => {
+    if (!result || result.ok === false) {
+      setErr((result && result.error) || 'Aksi gagal.');
+      setMsg('');
+      return false;
+    }
+    setErr('');
+    setMsg(okText || '');
+    onChanged();
+    return true;
+  };
+
+  const verify = () => {
+    if (run(checkInBooking(b.id, code, ACTOR + ':' + me), 'Check-in terverifikasi, status menjadi Tiba.')) setCode('');
+  };
+
+  const claim = () => {
+    let taken = 0;
+    mineUnassigned(b).forEach((unassignedCar, idx) => {
+      const realIndex = b.cars.indexOf(unassignedCar);
+      const res = assignMechanic(b.id, realIndex, me, ACTOR + ':' + me);
+      if (res.ok) taken += 1;
+      void idx;
+    });
+    if (!taken) { setErr('Tidak ada mobil yang bisa diambil (mekanik lain mungkin sudah menanganinya).'); return; }
+    setErr('');
+    setMsg(taken + ' mobil diambil untuk ' + me + '.');
+    onChanged();
+  };
+
+  const finish = () => {
+    const missing = total - done;
+    if (!allDone && !window.confirm('Masih ada ' + missing + ' mobil yang belum ditandai selesai. Tetap tandai booking ' + b.id + ' selesai?')) return;
+    run(updateBookingStatus(b.id, 'done', ACTOR + ':' + me), 'Booking ' + b.id + ' selesai.');
+  };
 
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16, padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0, flexWrap: 'wrap' }}>
           <span style={{ fontSize: 18, fontWeight: 800, letterSpacing: 1 }}>{b.id}</span>
           <StatusChip status={b.status} />
-          {unassigned ? (
-            <span style={{ fontSize: 12, fontWeight: 800, color: TONE.amber.fg, background: TONE.amber.bg, borderRadius: 999, padding: '4px 10px' }}>Belum ditugaskan</span>
+          {openCars > 0 ? (
+            <span style={{ fontSize: 12, fontWeight: 800, color: TONE.amber.fg, background: TONE.amber.bg, borderRadius: 999, padding: '4px 10px' }}>
+              {openCars} mobil belum ada mekanik
+            </span>
           ) : null}
         </div>
-        <span style={{ fontSize: 12, color: MUTED }}>{fmtDateID(b.createdAt)} WIB</span>
+        <span style={{ fontSize: 12, color: MUTED }}>{b.dayFull} · {b.slot}</span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Jadwal</div>
           <div style={{ fontSize: 15, fontWeight: 700 }}>{b.dayFull} · {b.slot}</div>
-          <div style={{ fontSize: 13, color: GRAY }}>{b.wait === 'tunggu' ? 'Menunggu di bengkel' : 'Mobil ditinggal'} · Mekanik: {b.mech}</div>
+          <div style={{ fontSize: 13, color: GRAY }}>{b.wait === 'tunggu' ? 'Menunggu di bengkel' : 'Mobil ditinggal'} · {total} mobil · {myCars} untukmu</div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <div style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Pelanggan</div>
           <div style={{ fontSize: 15, fontWeight: 700 }}>{b.role === 'driver' ? 'Pengantar' : 'Pemilik'} · {b.phone}</div>
           {b.ownerPhone ? <div style={{ fontSize: 13, color: GRAY }}>Pemilik (persetujuan biaya): {b.ownerPhone}</div> : null}
-          <div style={{ fontSize: 13, color: GRAY }}>{total} mobil · {done} selesai</div>
+          <div style={{ fontSize: 13, color: GRAY }}>{done} dari {total} mobil selesai</div>
         </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {b.cars.map((c, i) => {
-          const on = doneCars.indexOf(i) !== -1;
+          const mine = c.mech === me;
+          const canToggle = mine && b.status === 'in_progress';
           return (
-            <button key={i} type="button" onClick={() => onToggleCar(b.id, i)} disabled={b.status === 'done'}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', background: BG, borderRadius: 10, padding: '8px 12px', border: 'none', cursor: b.status === 'done' ? 'default' : 'pointer', font: 'inherit', color: INK }}>
-              <CarCheck on={on} />
+            <button key={c.plate + i} type="button" onClick={() => canToggle && run(setCarDone(b.id, i, !c.done, ACTOR + ':' + me), c.done ? c.plate + ' dibuka lagi.' : c.plate + ' ditandai selesai.')}
+              disabled={!canToggle}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', textAlign: 'left', background: BG, borderRadius: 10, padding: '8px 12px', border: mine ? '2px solid ' + accent : '2px solid transparent', cursor: canToggle ? 'pointer' : 'default', font: 'inherit', color: INK }}>
+              <CarCheck on={c.done} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div>
-                  <span style={{ fontSize: 15, fontWeight: 800, textDecoration: on ? 'line-through' : 'none', color: on ? GRAY : INK }}>{c.plate}</span>
+                  <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
                   <span style={{ fontSize: 13, color: GRAY }}> · {c.model}</span>
                 </div>
-                <div style={{ fontSize: 13, color: GRAY }}>{c.svc} · {durText(c.svc)}</div>
+                <div style={{ fontSize: 13, color: GRAY }}>{c.svc} · {durText(c.svc)} · {c.mech ? c.mech : 'belum ada mekanik'}</div>
               </div>
+              {canToggle ? <span style={{ fontSize: 11, fontWeight: 800, color: GRAY, whiteSpace: 'nowrap' }}>{c.done ? 'selesai' : 'tandai selesai'}</span> : null}
             </button>
           );
         })}
@@ -290,56 +312,66 @@ function JobCard({ b, onArrive, onStart, onFinish, onToggleCar, onClaim, accent 
         <span style={{ fontSize: 12, fontWeight: 800, color: GRAY, whiteSpace: 'nowrap' }}>{done}/{total} mobil</span>
       </div>
 
+      {b.status === 'cancelled' || b.status === 'no_show' ? (
+        <div style={{ fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: '8px 12px' }}>
+          {statusLabel(b.status)}{b.closedReason ? ' · ' + b.closedReason : ''}
+        </div>
+      ) : null}
+
       {b.note ? (
         <div style={{ fontSize: 13, lineHeight: 1.5, color: GRAY, background: '#FFFFFF', border: '1px dashed ' + MUTED, borderRadius: 10, padding: '8px 12px' }}>
           Catatan pelanggan: {b.note}
         </div>
       ) : null}
 
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
-        {unassigned ? (
-          <>
-            <button type="button" onClick={() => onClaim(b.id)}
+      {b.status === 'confirmed' ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: 12, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 12 }}>
+          <div style={{ fontSize: 13, fontWeight: 700 }}>Kode check-in pelanggan (4 angka)</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <input type="text" inputMode="numeric" maxLength={4} placeholder="0000" value={code}
+              onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 4)); setErr(''); }}
+              style={{ width: 110, height: 44, boxSizing: 'border-box', textAlign: 'center', letterSpacing: 6, fontSize: 18, fontWeight: 700, border: '1.5px solid ' + MUTED, borderRadius: 10, background: '#FFFFFF', color: INK }} />
+            <button type="button" onClick={verify}
               style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-              Ambil tugas ini
+              Verifikasi kedatangan
             </button>
-            <span style={{ fontSize: 12, color: MUTED }}>Belum ada mekanik yang ditugaskan.</span>
-          </>
-        ) : null}
+          </div>
+        </div>
+      ) : null}
 
-        {b.status === 'confirmed' ? (
-          <>
-            <button type="button" onClick={() => onArrive(b.id)}
-              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: '2px solid ' + INK, background: '#FFFFFF', color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-              Catat kedatangan
-            </button>
-            <span style={{ fontSize: 12, color: MUTED }}>Mobil belum tiba di bengkel.</span>
-          </>
-        ) : null}
+      {err ? <div style={{ fontSize: 13, color: RED, background: TONE.red.bg, borderRadius: 10, padding: '8px 12px' }}>{err}</div> : null}
+      {msg ? <div style={{ fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: '8px 12px' }}>{msg}</div> : null}
 
-        {b.status === 'arrived' ? (
-          <button type="button" onClick={() => onStart(b.id)}
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+        {openCars > 0 && b.status !== 'done' ? (
+          <button type="button" onClick={claim}
             style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
+            Ambil {openCars} mobil ini
+          </button>
+        ) : null}
+
+        {b.status === 'arrived' && myCars > 0 ? (
+          <button type="button" onClick={() => run(updateBookingStatus(b.id, 'in_progress', ACTOR + ':' + me), 'Pekerjaan dimulai.')}
+            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: INK, color: '#FFFFFF', fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
             Mulai dikerjakan
           </button>
         ) : null}
 
-        {b.status === 'in_progress' ? (
-          <>
-            <button type="button" onClick={() => onFinish(b.id, allDone, total - done)}
-              style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: allDone ? 1 : 0.78 }}>
-              Selesai & serahkan
-            </button>
-            <span style={{ fontSize: 12, color: GRAY }}>
-              {allDone ? 'Semua mobil sudah ditandai selesai.' : (total - done) + ' mobil belum ditandai selesai.'}
-            </span>
-          </>
+        {b.status === 'in_progress' && myCars > 0 ? (
+          <button type="button" onClick={finish}
+            style={{ height: 44, padding: '0 16px', borderRadius: 10, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: allDone ? 1 : 0.8 }}>
+            Selesai & serahkan
+          </button>
         ) : null}
 
         {b.status === 'done' ? (
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 700, color: GREEN }}>
             <CheckIcon size={16} /> Selesai {b.updatedAt ? fmtDateID(b.updatedAt) : ''}
           </span>
+        ) : null}
+
+        {b.audit && b.audit.length > 0 ? (
+          <span style={{ fontSize: 12, color: MUTED, marginLeft: 'auto' }}>{b.audit.length} perubahan tercatat</span>
         ) : null}
       </div>
     </div>
@@ -354,10 +386,10 @@ function Dashboard({ session, onLogout }) {
   const [bookings, setBookings] = useState(() => loadBookings());
   const [scope, setScope] = useState('mine');
   const [filter, setFilter] = useState('all');
+  const [notice, setNotice] = useState('');
 
   const refresh = () => setBookings(loadBookings());
 
-  /* Segarkan saat tab kembali aktif atau data diubah tab/aplikasi lain */
   useEffect(() => {
     const onSync = () => setBookings(loadBookings());
     window.addEventListener('focus', onSync);
@@ -368,18 +400,18 @@ function Dashboard({ session, onLogout }) {
     };
   }, []);
 
-  /* Mekanik hanya melihat pekerjaannya sendiri + yang belum ditugaskan */
-  const active = bookings.filter((b) => b.status !== 'cancelled');
-  const isMine = (b) => b.mech === session.name;
-  const isOpen = (b) => b.mech === AUTO_MECH;
+  /* Mekanik melihat pekerjaan yang ditugaskan kepadanya + mobil yang belum ada mekanik */
+  const current = bookings.filter((b) => b.status !== 'cancelled' && b.status !== 'no_show');
+  const isMine = (b) => mechHasBooking(b, session.name);
+  const isOpen = (b) => isUnassigned(b) && b.status !== 'done';
 
-  const inScope = scope === 'mine' ? active.filter(isMine) : active.filter(isOpen);
+  const inScope = scope === 'mine' ? current.filter(isMine) : current.filter(isOpen);
 
   const stats = {
-    active: active.filter(isMine).filter((b) => b.status !== 'done').length,
-    arrived: active.filter(isMine).filter((b) => b.status === 'arrived').length,
-    in_progress: active.filter(isMine).filter((b) => b.status === 'in_progress').length,
-    done: active.filter(isMine).filter((b) => b.status === 'done').length
+    active: current.filter(isMine).filter((b) => b.status !== 'done').length,
+    arrived: current.filter(isMine).filter((b) => b.status === 'arrived').length,
+    in_progress: current.filter(isMine).filter((b) => b.status === 'in_progress').length,
+    done: bookings.filter(isMine).filter((b) => b.status === 'done').length
   };
 
   const filtered = (filter === 'all' ? inScope : inScope.filter((b) => b.status === filter))
@@ -394,23 +426,6 @@ function Dashboard({ session, onLogout }) {
     { id: 'done', label: 'Selesai (' + inScope.filter((b) => b.status === 'done').length + ')' }
   ];
 
-  const toggleCar = (id, index) => {
-    const b = loadBookings().find((x) => x.id === id);
-    if (!b) return;
-    const doneCars = Array.isArray(b.doneCars) ? b.doneCars.slice() : [];
-    const at = doneCars.indexOf(index);
-    if (at === -1) doneCars.push(index); else doneCars.splice(at, 1);
-    doneCars.sort((x, y) => x - y);
-    updateBooking(id, { doneCars: doneCars });
-    refresh();
-  };
-
-  const claim = (id) => {
-    updateBooking(id, { mech: session.name });
-    setScope('mine');
-    refresh();
-  };
-
   const pill = (on) => ({
     height: 40, padding: '0 14px', borderRadius: 20,
     border: '2px solid ' + (on ? INK : LINE),
@@ -422,7 +437,6 @@ function Dashboard({ session, onLogout }) {
     <div style={{ minHeight: '100vh', background: BG, fontFamily: "'Plus Jakarta Sans', system-ui, sans-serif", color: INK, boxSizing: 'border-box' }}>
       <div style={{ maxWidth: 880, margin: '0 auto', padding: '24px 20px 48px', display: 'flex', flexDirection: 'column', gap: 20 }}>
 
-        {/* Header + identitas mekanik yang sedang masuk */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: accent, color: INK, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' }}>
             <WrenchIcon />
@@ -438,20 +452,18 @@ function Dashboard({ session, onLogout }) {
           </button>
         </div>
 
-        {/* Pilih lingkup pekerjaan */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ fontSize: 12, color: GRAY, fontWeight: 700 }}>Pekerjaan</div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <button type="button" onClick={() => { setScope('mine'); setFilter('all'); }} style={pill(scope === 'mine')}>
-              Tugas saya ({active.filter(isMine).length})
+              Tugas saya ({current.filter(isMine).length})
             </button>
             <button type="button" onClick={() => { setScope('open'); setFilter('all'); }} style={pill(scope === 'open')}>
-              Belum ditugaskan ({active.filter(isOpen).length})
+              Belum ada mekanik ({current.filter(isOpen).length})
             </button>
           </div>
         </div>
 
-        {/* Statistik tugas saya */}
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <StatCard label="Tugas aktif" value={stats.active} />
           <StatCard label="Menunggu dikerjakan" value={stats.arrived} />
@@ -459,55 +471,39 @@ function Dashboard({ session, onLogout }) {
           <StatCard label="Selesai" value={stats.done} />
         </div>
 
-        {/* Tab filter status */}
+        {notice ? <div style={{ fontSize: 13, color: TONE.green.fg, background: TONE.green.bg, borderRadius: 10, padding: '8px 12px' }}>{notice}</div> : null}
+
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {tabs.map((t) => (
             <button key={t.id} type="button" onClick={() => setFilter(t.id)} style={pill(filter === t.id)}>{t.label}</button>
           ))}
         </div>
 
-        {/* Daftar pekerjaan */}
         {filtered.length === 0 ? (
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, padding: '48px 24px', background: '#FFFFFF', border: '1px dashed ' + MUTED, borderRadius: 16, textAlign: 'center' }}>
             <div style={{ fontSize: 16, fontWeight: 800 }}>
-              {scope === 'mine' ? 'Belum ada pekerjaan untukmu' : 'Tidak ada pekerjaan yang belum ditugaskan'}
+              {scope === 'mine' ? 'Belum ada pekerjaan untukmu' : 'Tidak ada mobil tanpa mekanik'}
             </div>
-            <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, maxWidth: 420 }}>
+            <div style={{ fontSize: 14, color: GRAY, lineHeight: 1.6, maxWidth: 440 }}>
               {scope === 'mine'
-                ? 'Booking dari situs pelanggan yang ditugaskan ke ' + session.name + ' akan muncul otomatis di sini. Kamu juga bisa mengambil pekerjaan yang belum ditugaskan.'
-                : 'Semua booking sudah punya mekanik. Cek tab Tugas saya untuk melihat pekerjaanmu.'}
+                ? 'Admin menugaskan mobil kepadamu dari panel admin. Kamu juga bisa mengambil mobil yang belum punya mekanik.'
+                : 'Semua mobil sudah punya mekanik. Cek tab Tugas saya untuk melihat pekerjaanmu.'}
             </div>
-            {scope === 'mine' ? (
-              <button type="button" onClick={() => { seedSampleBookings(); refresh(); }}
-                style={{ height: 48, padding: '0 20px', borderRadius: 12, border: 'none', background: accent, color: INK, fontSize: 14, fontWeight: 800, cursor: 'pointer' }}>
-                Muat data contoh
-              </button>
-            ) : null}
+            <a href="admin.html" style={{ fontSize: 13, fontWeight: 800, color: INK }}>Buka panel admin</a>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             {filtered.map((b) => (
-              <JobCard
-                key={b.id}
-                b={b}
-                accent={accent}
-                onClaim={claim}
-                onArrive={(id) => { updateBookingStatus(id, 'arrived'); refresh(); }}
-                onStart={(id) => { updateBookingStatus(id, 'in_progress'); refresh(); }}
-                onFinish={(id, allDone, left) => {
-                  if (!allDone && !confirm('Masih ada ' + left + ' mobil yang belum ditandai selesai. Tetap tandai booking ' + id + ' selesai?')) return;
-                  updateBookingStatus(id, 'done');
-                  refresh();
-                }}
-                onToggleCar={toggleCar}
-              />
+              <JobCard key={b.id} b={b} accent={accent} me={session.name}
+                onChanged={() => { setNotice(''); refresh(); }} />
             ))}
           </div>
         )}
 
         <div style={{ fontSize: 12, color: MUTED, textAlign: 'center' }}>
-          Data tersimpan di browser ini (localStorage) dan sama dengan yang dipakai panel admin.
-          Untuk produksi, ganti lapisan data di <b>booking.js</b> dengan API backend.
+          Setiap aksi tercatat atas namamu (audit trail). Data tersimpan di browser ini (localStorage);
+          untuk produksi, ganti lapisan data di <b>booking.js</b> dengan API backend.{' '}
+          <a href="index.html" style={{ color: GRAY, fontWeight: 700 }}>Situs pelanggan →</a>
         </div>
       </div>
     </div>
