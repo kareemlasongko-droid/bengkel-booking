@@ -29,16 +29,15 @@ Atau cukup buka `index.html` langsung di browser (file://) — tetap berjalan.
 ## Deploy ke Vercel
 
 Proyek ini **situs statis murni** (dua halaman HTML + JS yang sudah
-terkompilasi), jadi di Vercel memakai preset **Other** dengan root direktori
-repo. Semuanya sudah diatur di `vercel.json`, jadi tidak perlu mengubah
-Framework Preset lewat dashboard:
+terkompilasi). Semuanya diatur di `vercel.json`, jadi tidak perlu menyentuh
+Framework Preset / Build Command / Output Directory di dashboard:
 
 ```json
 {
   "framework": null,
   "installCommand": "npm install --no-audit --no-fund",
   "buildCommand": "npm run vercel-build",
-  "outputDirectory": "."
+  "outputDirectory": "public"
 }
 ```
 
@@ -46,34 +45,62 @@ Arti tiap baris:
 
 | Kunci | Nilai | Kenapa |
 |---|---|---|
-| `framework` | `null` = preset **Other** | proyek bukan Next.js/Vite/CRA; Vercel tidak akan menebak-nebak framework |
-| `installCommand` | `npm install` | hanya perlu untuk esbuild (devDependency) |
-| `buildCommand` | `npm run vercel-build` → `npm run build` | mengompilasi `src/app.jsx` & `src/admin.jsx` jadi `app.js` & `admin.js`; hasil build juga sudah ikut di repo |
-| `outputDirectory` | `"."` (root repo) | `index.html` & `admin.html` ada di root, bukan di `public/` atau `dist/` |
+| `framework` | `null` = preset **Other** | proyek bukan Next.js/Vite/CRA |
+| `installCommand` | `npm install` | hanya untuk esbuild (devDependency) |
+| `buildCommand` | `npm run vercel-build` = `npm run build` + `npm run build:site` | mengompilasi `src/*.jsx` → `app.js` & `admin.js`, lalu **menyalin** HTML/JS/`vendor/` ke `public/` |
+| `outputDirectory` | `"public"` | folder yang disajikan Vercel; berisi hasil build apa adanya |
+
+Kenapa `public/` dan bukan `"."`: preset **Other** menyajikan `public/` bila
+folder itu ada, dan `outputDirectory: "."` (menyajikan root repo) sering gagal
+dibaca Vercel — muncul `No Output Directory named …` atau halaman 404.
+Sekarang build **selalu menghasilkan folder `public/`** yang jelas, jadi
+deploy tidak bergantung pada cara Vercel membaca root repo.
+
+Isi `public/` (dibuat otomatis, tidak di-commit — lihat `.gitignore`):
+
+```
+public/
+├── index.html   admin.html
+├── app.js       admin.js      booking.js
+└── vendor/react.js  vendor/react-dom.js
+```
+
+Skrip penyalinnya `scripts/build-static.mjs` — hanya `cp`, tidak mengubah satu
+baris pun kode/desain. Root repo tetap bisa dibuka langsung seperti biasa.
 
 Langkah deploy:
 
 1. Buka [vercel.com/new](https://vercel.com/new) → import repo ini.
-2. **Root Directory** biarkan kosong (root repo) — jangan diarahkan ke subfolder.
-3. Framework Preset, Build Command, dan Output Directory **biarkan apa adanya**;
-   `vercel.json` yang menentukannya (nilainya menimpa setting dashboard).
-4. Deploy. Hasilnya:
-   - `/` → halaman pelanggan (`index.html`)
-   - `/admin.html` → panel admin
+2. **Root Directory: kosongkan** (jangan diisi `.`, `/`, atau nama subfolder).
+3. Framework Preset / Build Command / Output Directory: **biarkan default** —
+   `vercel.json` yang menentukan (nilainya menimpa setting dashboard).
+4. Deploy. Hasilnya `/` → halaman pelanggan, `/admin.html` → panel admin.
 
-Catatan:
+### Troubleshooting
+
+| Pesan / gejala | Penyebab | Perbaikan |
+|---|---|---|
+| `The specified Root Directory "…" does not exist` | kolom **Root Directory** di dashboard diisi path yang tidak ada (mis. `.`, `/`, atau subfolder lama) | Settings → Build and Deployment → kosongkan **Root Directory** → Save → Redeploy |
+| `No Output Directory named "public" found` | langkah build tidak jalan / gagal sebelum `build:site` | cek log: `npm run vercel-build` harus mencetak `build-static: public/ siap` |
+| Build sukses tapi semua URL 404 | output directory tidak cocok | pastikan `outputDirectory: "public"` dan `public/` diisi build |
+| `vercel.json` sepertinya diabaikan | Root Directory menunjuk subfolder → Vercel tidak membaca `vercel.json` di root | kosongkan Root Directory |
+| Halaman blank, font beda | `vendor/` tidak ikut tersalin | pastikan folder `vendor/` ada di repo (di-commit) |
+
+Catatan: `rootDirectory` **tidak bisa** diatur lewat `vercel.json` — itu
+khusus setting dashboard. Karena itu jangan diisi apa pun.
+
+Catatan lain:
 
 - Tautan antar-halaman memakai path relatif (`admin.html`, `index.html`,
   `./vendor/...`, `./app.js`), jadi tetap jalan baik di root domain maupun di
   preview deployment — tidak ada URL absolut yang perlu diubah.
-- `.vercelignore` mencegah `node_modules`, artefak tunnel lama (`tunnel.log`,
-  `tunnel-watchdog.sh`, `PUBLIC_URL.txt`), dan `README.md` ikut ter-upload
-  sebagai file publik.
-- `node_modules/` di-`.gitignore`; `package-lock.json` ikut di-commit supaya
-  versi esbuild saat build di Vercel sama dengan di lokal.
+- `.vercelignore` mencegah `node_modules`, `public/` (hasil build lama),
+  artefak tunnel lama (`tunnel.log`, `tunnel-watchdog.sh`, `PUBLIC_URL.txt`),
+  dan `README.md` ikut ter-upload sebagai file publik.
+- `node_modules/` dan `public/` di-`.gitignore`; `package-lock.json` ikut
+  di-commit supaya versi esbuild saat build di Vercel sama dengan di lokal.
 - Data booking tetap disimpan di `localStorage` browser (tanpa backend), jadi
-  di Vercel pun tidak butuh database atau environment variable. Lihat bagian
-  *Menyambung ke backend sungguhan* bila ingin data terpusat.
+  di Vercel pun tidak butuh database atau environment variable.
 - `npm run start` (python http.server) hanya untuk lokal; Vercel tidak
   menjalankan server apa pun.
 
@@ -126,11 +153,13 @@ bengkel-booking/
 ├── vendor/
 │   ├── react.js        # React 18 (UMD, lokal — tanpa CDN)
 │   └── react-dom.js
+├── scripts/
+│   └── build-static.mjs # menyalin hasil build ke public/ (untuk Vercel)
 ├── package.json        # skrip build (esbuild) + vercel-build
 ├── package-lock.json   # versi esbuild terkunci untuk build di Vercel
-├── vercel.json         # preset deploy: Other, build, output = root
+├── vercel.json         # preset deploy: Other, build, output = public/
 ├── .vercelignore       # file yang tidak di-upload/di-serve di Vercel
-└── .gitignore          # node_modules, .vercel, dll.
+└── .gitignore          # node_modules, public/, .vercel, dll.
 ```
 
 ## Kustomisasi
@@ -165,8 +194,18 @@ dan database.
 ## Build ulang (setelah mengedit `src/`)
 
 ```bash
-npm install     # sekali saja (mengunduh esbuild)
-npm run build   # menulis ulang app.js & admin.js
+npm install          # sekali saja (mengunduh esbuild)
+npm run build        # menulis ulang app.js & admin.js
+npm run build:site   # (opsional) menyegarkan public/ seperti saat deploy
+npm run vercel-build # keduanya sekaligus — inilah yang dijalankan Vercel
+```
+
+`public/` adalah folder hasil build untuk Vercel dan tidak di-commit; kalau
+ingin menguji hasil deploy secara lokal:
+
+```bash
+npm run vercel-build
+python3 -m http.server 8000 --directory public
 ```
 
 Hasil build sudah disertakan, jadi build ulang hanya perlu jika Anda
