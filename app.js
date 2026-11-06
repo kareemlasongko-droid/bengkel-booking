@@ -52,6 +52,7 @@
   const toCarList = (phoneValue) => loadVehicles(phoneValue).map((c, i) => ({
     id: "v" + i + "-" + String(c.plate).replace(/\W/g, ""),
     plate: c.plate,
+    brand: c.brand || "",
     model: c.model,
     last: c.last
   }));
@@ -98,7 +99,10 @@
     });
     const [addOpen, setAddOpen] = useState(false);
     const [newPlate, setNewPlate] = useState("");
+    const [newBrand, setNewBrand] = useState("");
+    const [newBrandCustom, setNewBrandCustom] = useState("");
     const [newModel, setNewModel] = useState("");
+    const [addErr, setAddErr] = useState("");
     const [svc, setSvc] = useState({});
     const [note, setNote] = useState("");
     const [wait, setWait] = useState("tunggu");
@@ -157,7 +161,7 @@
           ownerPhone: driver ? ownerPhone.trim() : "",
           cars: selectedCars.map((c) => {
             const sv = SERVICES.find((x) => x.id === svc[c.id]);
-            return { plate: c.plate, model: c.model, svc: sv ? sv.name : "-", mech: chosenMech, done: false };
+            return { plate: c.plate, brand: c.brand || "", model: c.model, svc: sv ? sv.name : "-", mech: chosenMech, done: false };
           }),
           note: note.trim(),
           wait,
@@ -205,6 +209,12 @@
       setCode("");
       setCheckin("");
       setSavedId("");
+      setAddOpen(false);
+      setNewPlate("");
+      setNewBrand("");
+      setNewBrandCustom("");
+      setNewModel("");
+      setAddErr("");
       setLookErr("");
       setLooked(null);
       setResSlot("");
@@ -215,18 +225,33 @@
       setSelected((prev) => __spreadProps(__spreadValues({}, prev), { [id]: !prev[id] }));
       setSlot("");
     };
+    const brandValue = () => newBrand === OTHER_BRAND ? newBrandCustom.trim() : newBrand;
+    const canSaveCar = newPlate.trim().length >= 3 && brandValue().length >= 2;
     const saveCar = () => {
       const plate = newPlate.trim().toUpperCase();
-      if (!plate) return;
-      const res = upsertVehicle(phone, { plate, model: newModel.trim() });
-      if (!res.ok) return;
+      if (!plate) {
+        setAddErr("Plat nomor wajib diisi.");
+        return;
+      }
+      if (brandValue().length < 2) {
+        setAddErr("Pilih merek mobil dulu.");
+        return;
+      }
+      const res = upsertVehicle(phone, { plate, brand: brandValue(), model: newModel.trim() });
+      if (!res.ok) {
+        setAddErr(res.error);
+        return;
+      }
       const list = toCarList(phone);
       const added = list.find((c) => c.plate === res.car.plate);
       setCars(list);
       if (added) setSelected((prev) => Object.assign({}, prev, { [added.id]: true }));
       setAddOpen(false);
       setNewPlate("");
+      setNewBrand("");
+      setNewBrandCustom("");
       setNewModel("");
+      setAddErr("");
       setSlot("");
     };
     const pickDay = (i) => {
@@ -341,7 +366,7 @@
     const dayIso = (DAYS[day] || {}).iso;
     const confirmCars = selectedCars.map((c) => {
       const sv = SERVICES.find((x) => x.id === svc[c.id]);
-      return { plate: c.plate, model: c.model, svc: sv ? sv.name : "-" };
+      return { plate: c.plate, brand: c.brand || "", model: c.model, svc: sv ? sv.name : "-" };
     });
     const carsLine = confirmCars.map((c) => c.plate + " (" + c.svc + ")").join(", ");
     const who = driver ? "pemilik" : "kamu";
@@ -413,7 +438,7 @@
           style: { width: "100%", minHeight: 72, boxSizing: "border-box", padding: "14px 16px", display: "flex", alignItems: "center", gap: 14, textAlign: "left", background: "#FFFFFF", color: INK, border: "2px solid " + (on ? INK : LINE), borderRadius: 14, cursor: "pointer" }
         },
         /* @__PURE__ */ React.createElement(BoxCheck, { on, accent }),
-        /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 3, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: GRAY } }, c.model), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, c.last))
+        /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 3, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: GRAY } }, carTitle(c)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, c.last))
       );
     }), /* @__PURE__ */ React.createElement(
       "button",
@@ -424,14 +449,46 @@
       },
       /* @__PURE__ */ React.createElement(PlusIcon, null),
       "Tambah mobil baru"
-    ), addOpen && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "plate", style: { fontSize: 14, fontWeight: 700 } }, "Plat nomor"), /* @__PURE__ */ React.createElement(
+    ), addOpen && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 14 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "brand", style: { fontSize: 14, fontWeight: 700 } }, "Merek mobil"), /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        id: "brand",
+        value: newBrand,
+        required: true,
+        onChange: (e) => {
+          setNewBrand(e.target.value);
+          setAddErr("");
+        },
+        style: { width: "100%", minHeight: 48, boxSizing: "border-box", padding: "0 12px", border: "1.5px solid " + (newBrand ? MUTED : INK), borderRadius: 10, background: "#FFFFFF", color: INK, fontSize: 16 }
+      },
+      /* @__PURE__ */ React.createElement("option", { value: "" }, "\u2014 pilih merek \u2014"),
+      CAR_BRANDS.map((b) => /* @__PURE__ */ React.createElement("option", { key: b, value: b }, b))
+    ), newBrand === OTHER_BRAND && /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        id: "brand-custom",
+        type: "text",
+        autoFocus: true,
+        placeholder: "Tulis merek mobil, contoh: Peugeot",
+        value: newBrandCustom,
+        onChange: (e) => {
+          setNewBrandCustom(e.target.value);
+          setAddErr("");
+        },
+        style: { width: "100%", height: 48, boxSizing: "border-box", padding: "0 14px", border: "1.5px solid " + MUTED, borderRadius: 10, background: "#FFFFFF", color: INK, fontSize: 16 }
+      }
+    )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "plate", style: { fontSize: 14, fontWeight: 700 } }, "Plat nomor"), /* @__PURE__ */ React.createElement(
       "input",
       {
         id: "plate",
         type: "text",
+        autoCapitalize: "characters",
         placeholder: "B 1234 XYZ",
         value: newPlate,
-        onChange: (e) => setNewPlate(e.target.value),
+        onChange: (e) => {
+          setNewPlate(e.target.value.toUpperCase());
+          setAddErr("");
+        },
         style: { width: "100%", height: 48, boxSizing: "border-box", padding: "0 14px", border: "1.5px solid " + MUTED, borderRadius: 10, background: "#FFFFFF", color: INK, fontSize: 16 }
       }
     )), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "model", style: { fontSize: 14, fontWeight: 700 } }, "Tipe dan tahun (opsional)"), /* @__PURE__ */ React.createElement(
@@ -439,20 +496,21 @@
       {
         id: "model",
         type: "text",
-        placeholder: "Contoh: Toyota Avanza 2018",
+        placeholder: "Contoh: Avanza 2018",
         value: newModel,
         onChange: (e) => setNewModel(e.target.value),
         style: { width: "100%", height: 48, boxSizing: "border-box", padding: "0 14px", border: "1.5px solid " + MUTED, borderRadius: 10, background: "#FFFFFF", color: INK, fontSize: 16 }
       }
-    )), /* @__PURE__ */ React.createElement(
+    )), addErr ? /* @__PURE__ */ React.createElement("div", { role: "alert", style: { fontSize: 13, color: "#B42318", background: "#FDE8E6", borderRadius: 10, padding: "10px 12px" } }, addErr) : null, /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",
         onClick: saveCar,
-        style: { height: 48, border: "none", borderRadius: 10, background: INK, color: "#FFFFFF", fontSize: 15, fontWeight: 700, cursor: "pointer" }
+        disabled: !canSaveCar,
+        style: { minHeight: 48, border: "none", borderRadius: 10, background: canSaveCar ? accent : LINE, color: canSaveCar ? INK : GRAY, fontSize: 15, fontWeight: 700, cursor: canSaveCar ? "pointer" : "default" }
       },
       "Simpan mobil"
-    ))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700 } }, "Kamu sebagai"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, roles.map((r) => /* @__PURE__ */ React.createElement(
+    ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, lineHeight: 1.5, color: GRAY } }, "Merek dan plat nomor dipakai mekanik untuk mengenali mobil. Tipe dan tahun membantu riwayat servis."))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, fontWeight: 700 } }, "Kamu sebagai"), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", gap: 8 } }, roles.map((r) => /* @__PURE__ */ React.createElement(
       "button",
       {
         key: r.id,
@@ -475,7 +533,7 @@
     ), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, lineHeight: 1.5, color: GRAY } }, "Persetujuan biaya dikirim ke pemilik. Kabar mobil diterima dan siap diambil tetap ke nomor kamu.")))), step === "service" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 20 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Servis apa yang dibutuhkan?"), /* @__PURE__ */ React.createElement("p", { style: { margin: 0, fontSize: 16, lineHeight: 1.5, color: GRAY } }, "Pilih satu untuk tiap mobil. Belum yakin? Pilih minta dicek, mekanik memeriksa dulu.")), selectedCars.map((c) => {
       const cur = svc[c.id];
       const curSvc = SERVICES.find((x) => x.id === cur);
-      return /* @__PURE__ */ React.createElement("div", { key: c.id, style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, c.model)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, SERVICES.map((sv) => {
+      return /* @__PURE__ */ React.createElement("div", { key: c.id, style: { display: "flex", flexDirection: "column", gap: 14, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, carTitle(c))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 8 } }, SERVICES.map((sv) => {
         const on = cur === sv.id;
         return /* @__PURE__ */ React.createElement(
           "button",
@@ -544,7 +602,7 @@
       },
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, fontWeight: 800 } }, sl.t),
       /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: sl.subFg } }, sl.sub)
-    )))), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 14, fontSize: 14, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, marginBottom: 2 } }, "Perkiraan"), /* @__PURE__ */ React.createElement("div", { style: { color: GRAY } }, estimate))), step === "confirm" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Cek lagi, lalu konfirmasi")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Jadwal"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, whenText), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, waitText, " \xB7 Mekanik: ", mechName)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Mobil dan servis"), confirmCars.map((cc) => /* @__PURE__ */ React.createElement("div", { key: cc.plate, style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, fontWeight: 800 } }, cc.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, cc.model)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 700, textAlign: "right" } }, cc.svc)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kontak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, roleLabel), " \xB7 ", phone), driver && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "Pemilik, untuk persetujuan biaya"), " \xB7 ", ownerPhone)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement(
+    )))), /* @__PURE__ */ React.createElement("div", { style: { padding: "14px 16px", background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 14, fontSize: 14, lineHeight: 1.5 } }, /* @__PURE__ */ React.createElement("div", { style: { fontWeight: 700, marginBottom: 2 } }, "Perkiraan"), /* @__PURE__ */ React.createElement("div", { style: { color: GRAY } }, estimate))), step === "confirm" && /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 18 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, /* @__PURE__ */ React.createElement("h1", { style: { margin: 0, fontSize: 28, lineHeight: 1.2, fontWeight: 800 } }, "Cek lagi, lalu konfirmasi")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Jadwal"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 18, fontWeight: 800 } }, whenText), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 14, color: GRAY } }, waitText, " \xB7 Mekanik: ", mechName)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 12, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Mobil dan servis"), confirmCars.map((cc) => /* @__PURE__ */ React.createElement("div", { key: cc.plate, style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 16, fontWeight: 800 } }, cc.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, carTitle(cc))), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 700, textAlign: "right" } }, cc.svc)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6, padding: 16, background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Kontak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, roleLabel), " \xB7 ", phone), driver && /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15 } }, /* @__PURE__ */ React.createElement("span", { style: { fontWeight: 700 } }, "Pemilik, untuk persetujuan biaya"), " \xB7 ", ownerPhone)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } }, /* @__PURE__ */ React.createElement(
       "button",
       {
         type: "button",

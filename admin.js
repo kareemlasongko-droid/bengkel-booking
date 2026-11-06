@@ -145,7 +145,7 @@
       if (run(rescheduleBooking(b.id, day.iso, resSlot, ACTOR), "Jadwal dipindah ke " + day.full + " \xB7 " + resSlot + ".")) setResSlot("");
     };
     const editable = b.status === "confirmed" || b.status === "arrived" || b.status === "in_progress";
-    return /* @__PURE__ */ React.createElement("div", { style: { background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800, letterSpacing: 1 } }, b.id), /* @__PURE__ */ React.createElement(StatusChip, { status: b.status }), b.sample ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: GRAY, border: "1px solid " + LINE, borderRadius: 999, padding: "3px 8px" } }, "CONTOH") : null, b.source === "walkin" ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: TONE.violet.fg, background: TONE.violet.bg, borderRadius: 999, padding: "3px 8px" } }, "WALK-IN") : null, isUnassigned(b) ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: TONE.amber.fg, background: TONE.amber.bg, borderRadius: 999, padding: "3px 8px" } }, "MEKANIK BELUM LENGKAP") : null), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Dibuat ", fmtDateID(b.createdAt), " WIB")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Jadwal servis"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.dayFull, " \xB7 ", b.slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal", " \xB7 ", total, " mobil \xB7 ", done, "/", total, " selesai")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Kontak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.role === "driver" ? "Pengantar" : "Pemilik", " \xB7 ", b.phone), b.ownerPhone ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pemilik (persetujuan biaya): ", b.ownerPhone) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.remindOn ? "Pengingat servis: aktif" : "Pengingat servis: mati", " \xB7 ", b.promoOn ? "Promo: boleh" : "Promo: tidak"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, b.cars.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: c.plate + i, style: { display: "flex", flexDirection: "column", gap: 8, background: BG, borderRadius: 10, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800, textDecoration: c.done ? "line-through" : "none", color: c.done ? GRAY : INK } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, " \xB7 ", c.model)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 700 } }, c.svc)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(
+    return /* @__PURE__ */ React.createElement("div", { style: { background: "#FFFFFF", border: "1px solid " + LINE, borderRadius: 16, padding: 16, display: "flex", flexDirection: "column", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 10, minWidth: 0, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 18, fontWeight: 800, letterSpacing: 1 } }, b.id), /* @__PURE__ */ React.createElement(StatusChip, { status: b.status }), b.sample ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: GRAY, border: "1px solid " + LINE, borderRadius: 999, padding: "3px 8px" } }, "CONTOH") : null, b.source === "walkin" ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: TONE.violet.fg, background: TONE.violet.bg, borderRadius: 999, padding: "3px 8px" } }, "WALK-IN") : null, isUnassigned(b) ? /* @__PURE__ */ React.createElement("span", { style: { fontSize: 11, fontWeight: 800, color: TONE.amber.fg, background: TONE.amber.bg, borderRadius: 999, padding: "3px 8px" } }, "MEKANIK BELUM LENGKAP") : null), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 12, color: MUTED } }, "Dibuat ", fmtDateID(b.createdAt), " WIB")), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(200px, 1fr))", gap: 12 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Jadwal servis"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.dayFull, " \xB7 ", b.slot), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.wait === "tunggu" ? "Menunggu di bengkel" : "Mobil ditinggal", " \xB7 ", total, " mobil \xB7 ", done, "/", total, " selesai")), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 2 } }, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 12, color: GRAY, fontWeight: 700 } }, "Kontak"), /* @__PURE__ */ React.createElement("div", { style: { fontSize: 15, fontWeight: 700 } }, b.role === "driver" ? "Pengantar" : "Pemilik", " \xB7 ", b.phone), b.ownerPhone ? /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, "Pemilik (persetujuan biaya): ", b.ownerPhone) : null, /* @__PURE__ */ React.createElement("div", { style: { fontSize: 13, color: GRAY } }, b.remindOn ? "Pengingat servis: aktif" : "Pengingat servis: mati", " \xB7 ", b.promoOn ? "Promo: boleh" : "Promo: tidak"))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } }, b.cars.map((c, i) => /* @__PURE__ */ React.createElement("div", { key: c.plate + i, style: { display: "flex", flexDirection: "column", gap: 8, background: BG, borderRadius: 10, padding: "10px 12px" } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 12, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement("div", { style: { minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 15, fontWeight: 800, textDecoration: c.done ? "line-through" : "none", color: c.done ? GRAY : INK } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, " \xB7 ", carTitle(c))), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, fontWeight: 700 } }, c.svc)), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" } }, /* @__PURE__ */ React.createElement(
       MechSelect,
       {
         car: c,
@@ -220,6 +220,8 @@
     const [role, setRole] = useState("owner");
     const [ownerPhone, setOwnerPhone] = useState("");
     const [plate, setPlate] = useState("");
+    const [brand, setBrand] = useState("");
+    const [brandCustom, setBrandCustom] = useState("");
     const [model, setModel] = useState("");
     const [svcId, setSvcId] = useState(SERVICE_CATALOG[0].id);
     const [dayIdx, setDayIdx] = useState(0);
@@ -231,12 +233,15 @@
       setRole("owner");
       setOwnerPhone("");
       setPlate("");
+      setBrand("");
+      setBrandCustom("");
       setModel("");
       setSvcId(SERVICE_CATALOG[0].id);
       setDayIdx(0);
       setSlot("");
       setErr("");
     };
+    const brandValue = () => brand === OTHER_BRAND ? brandCustom.trim() : brand;
     const submit = () => {
       const day = days[dayIdx] || days[0];
       const svc = SERVICE_CATALOG.find((x) => x.id === svcId) || SERVICE_CATALOG[0];
@@ -252,6 +257,10 @@
         setErr("Plat nomor wajib diisi.");
         return;
       }
+      if (brandValue().length < 2) {
+        setErr("Pilih merek mobil dulu (isi manual bila memilih Lainnya).");
+        return;
+      }
       if (!slot) {
         setErr("Pilih jam kedatangan.");
         return;
@@ -264,7 +273,7 @@
         phone: phone.trim(),
         role,
         ownerPhone: role === "driver" ? ownerPhone.trim() : "",
-        cars: [{ plate: plate.trim().toUpperCase(), model: model.trim(), svc: svc.name, mech: "", done: false }],
+        cars: [{ plate: plate.trim().toUpperCase(), brand: brandValue(), model: model.trim(), svc: svc.name, mech: "", done: false }],
         note: "Walk-in didaftarkan admin",
         wait: "tunggu",
         dateISO: day.iso,
@@ -277,7 +286,7 @@
         status: "arrived",
         actor: ACTOR
       });
-      upsertVehicle(phone, { plate: plate.trim().toUpperCase(), model: model.trim() });
+      upsertVehicle(phone, { plate: plate.trim().toUpperCase(), brand: brandValue(), model: model.trim() });
       reset();
       setOpen(false);
       onCreated("Walk-in " + booking.id + " ditambahkan (status Tiba).");
@@ -296,7 +305,33 @@
         style: { border: "none", background: "transparent", color: GRAY, fontSize: 13, fontWeight: 700, cursor: "pointer" }
       },
       "Tutup"
-    )), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-phone", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Nomor WhatsApp"), /* @__PURE__ */ React.createElement("input", { id: "wi-phone", type: "tel", value: phone, onChange: (e) => setPhone(e.target.value), placeholder: "08xx xxxx xxxx", style: inputBase })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-plate", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Plat nomor"), /* @__PURE__ */ React.createElement("input", { id: "wi-plate", type: "text", value: plate, onChange: (e) => setPlate(e.target.value.toUpperCase()), placeholder: "B 1234 XYZ", style: inputBase })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-model", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Tipe / tahun"), /* @__PURE__ */ React.createElement("input", { id: "wi-model", type: "text", value: model, onChange: (e) => setModel(e.target.value), placeholder: "Toyota Avanza 2018", style: inputBase })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-svc", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Servis"), /* @__PURE__ */ React.createElement("select", { id: "wi-svc", value: svcId, onChange: (e) => setSvcId(e.target.value), style: inputBase }, SERVICE_CATALOG.map((sv) => /* @__PURE__ */ React.createElement("option", { key: sv.id, value: sv.id }, sv.name)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-day", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Tanggal"), /* @__PURE__ */ React.createElement("select", { id: "wi-day", value: dayIdx, onChange: (e) => {
+    )), /* @__PURE__ */ React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 } }, /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-phone", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Nomor WhatsApp"), /* @__PURE__ */ React.createElement("input", { id: "wi-phone", type: "tel", value: phone, onChange: (e) => setPhone(e.target.value), placeholder: "08xx xxxx xxxx", style: inputBase })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-brand", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Merek mobil"), /* @__PURE__ */ React.createElement(
+      "select",
+      {
+        id: "wi-brand",
+        value: brand,
+        onChange: (e) => {
+          setBrand(e.target.value);
+          setErr("");
+        },
+        style: Object.assign({}, inputBase, brand ? {} : { borderColor: INK })
+      },
+      /* @__PURE__ */ React.createElement("option", { value: "" }, "\u2014 pilih merek \u2014"),
+      CAR_BRANDS.map((b) => /* @__PURE__ */ React.createElement("option", { key: b, value: b }, b))
+    ), brand === OTHER_BRAND ? /* @__PURE__ */ React.createElement(
+      "input",
+      {
+        id: "wi-brand-custom",
+        type: "text",
+        placeholder: "Tulis merek mobil",
+        value: brandCustom,
+        onChange: (e) => {
+          setBrandCustom(e.target.value);
+          setErr("");
+        },
+        style: inputBase
+      }
+    ) : null), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-plate", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Plat nomor"), /* @__PURE__ */ React.createElement("input", { id: "wi-plate", type: "text", value: plate, onChange: (e) => setPlate(e.target.value.toUpperCase()), placeholder: "B 1234 XYZ", style: inputBase })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-model", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Tipe / tahun"), /* @__PURE__ */ React.createElement("input", { id: "wi-model", type: "text", value: model, onChange: (e) => setModel(e.target.value), placeholder: "Toyota Avanza 2018", style: inputBase })), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-svc", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Servis"), /* @__PURE__ */ React.createElement("select", { id: "wi-svc", value: svcId, onChange: (e) => setSvcId(e.target.value), style: inputBase }, SERVICE_CATALOG.map((sv) => /* @__PURE__ */ React.createElement("option", { key: sv.id, value: sv.id }, sv.name)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-day", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Tanggal"), /* @__PURE__ */ React.createElement("select", { id: "wi-day", value: dayIdx, onChange: (e) => {
       setDayIdx(parseInt(e.target.value, 10));
       setSlot("");
     }, style: inputBase }, days.map((d, i) => /* @__PURE__ */ React.createElement("option", { key: d.iso, value: i }, d.full)))), /* @__PURE__ */ React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 4 } }, /* @__PURE__ */ React.createElement("label", { htmlFor: "wi-slot", style: { fontSize: 12, fontWeight: 700, color: GRAY } }, "Jam"), /* @__PURE__ */ React.createElement("select", { id: "wi-slot", value: slot, onChange: (e) => setSlot(e.target.value), style: inputBase }, /* @__PURE__ */ React.createElement("option", { value: "" }, "\u2014 pilih jam \u2014"), SLOT_TEMPLATE.map((sl) => {

@@ -55,6 +55,7 @@ const slotOkFor = (dateISO, slot, mechId, count) => slotOk(dateISO, slot, mechNa
 const toCarList = (phoneValue) => loadVehicles(phoneValue).map((c, i) => ({
   id: 'v' + i + '-' + String(c.plate).replace(/\W/g, ''),
   plate: c.plate,
+  brand: c.brand || '',
   model: c.model,
   last: c.last
 }));
@@ -111,7 +112,10 @@ function App() {
   });
   const [addOpen, setAddOpen] = useState(false);
   const [newPlate, setNewPlate] = useState('');
+  const [newBrand, setNewBrand] = useState('');
+  const [newBrandCustom, setNewBrandCustom] = useState('');
   const [newModel, setNewModel] = useState('');
+  const [addErr, setAddErr] = useState('');
   const [svc, setSvc] = useState({});
   const [note, setNote] = useState('');
   const [wait, setWait] = useState('tunggu');
@@ -175,7 +179,7 @@ function App() {
         ownerPhone: driver ? ownerPhone.trim() : '',
         cars: selectedCars.map((c) => {
           const sv = SERVICES.find((x) => x.id === svc[c.id]);
-          return { plate: c.plate, model: c.model, svc: sv ? sv.name : '-', mech: chosenMech, done: false };
+          return { plate: c.plate, brand: c.brand || '', model: c.model, svc: sv ? sv.name : '-', mech: chosenMech, done: false };
         }),
         note: note.trim(),
         wait: wait,
@@ -208,6 +212,7 @@ function App() {
     setSelected({ c1: true }); setSvc({}); setNote('');
     setWait('tunggu'); setDay(0); setMech('auto'); setSlot('');
     setRemindOn(true); setPromoOn(false); setCode(''); setCheckin(''); setSavedId('');
+    setAddOpen(false); setNewPlate(''); setNewBrand(''); setNewBrandCustom(''); setNewModel(''); setAddErr('');
     setLookErr(''); setLooked(null); setResSlot(''); setResMsg('');
     scrollTop();
   };
@@ -217,16 +222,21 @@ function App() {
     setSlot('');
   };
 
+  const brandValue = () => (newBrand === OTHER_BRAND ? newBrandCustom.trim() : newBrand);
+  const canSaveCar = newPlate.trim().length >= 3 && brandValue().length >= 2;
+
   const saveCar = () => {
     const plate = newPlate.trim().toUpperCase();
-    if (!plate) return;
-    const res = upsertVehicle(phone, { plate: plate, model: newModel.trim() });
-    if (!res.ok) return;
+    if (!plate) { setAddErr('Plat nomor wajib diisi.'); return; }
+    if (brandValue().length < 2) { setAddErr('Pilih merek mobil dulu.'); return; }
+    const res = upsertVehicle(phone, { plate: plate, brand: brandValue(), model: newModel.trim() });
+    if (!res.ok) { setAddErr(res.error); return; }
     const list = toCarList(phone);
     const added = list.find((c) => c.plate === res.car.plate);
     setCars(list);
     if (added) setSelected((prev) => Object.assign({}, prev, { [added.id]: true }));
-    setAddOpen(false); setNewPlate(''); setNewModel(''); setSlot('');
+    setAddOpen(false); setNewPlate(''); setNewBrand(''); setNewBrandCustom(''); setNewModel('');
+    setAddErr(''); setSlot('');
   };
 
   const pickDay = (i) => { setDay(i); setSlot(''); };
@@ -342,7 +352,7 @@ function App() {
 
   const confirmCars = selectedCars.map((c) => {
     const sv = SERVICES.find((x) => x.id === svc[c.id]);
-    return { plate: c.plate, model: c.model, svc: sv ? sv.name : '-' };
+    return { plate: c.plate, brand: c.brand || '', model: c.model, svc: sv ? sv.name : '-' };
   });
   const carsLine = confirmCars.map((c) => c.plate + ' (' + c.svc + ')').join(', ');
 
@@ -467,7 +477,7 @@ function App() {
                     <BoxCheck on={on} accent={accent} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                       <span style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</span>
-                      <span style={{ fontSize: 14, color: GRAY }}>{c.model}</span>
+                      <span style={{ fontSize: 14, color: GRAY }}>{carTitle(c)}</span>
                       <span style={{ fontSize: 13, color: GRAY }}>{c.last}</span>
                     </span>
                   </button>
@@ -481,21 +491,37 @@ function App() {
               {addOpen && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 14 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <label htmlFor="brand" style={{ fontSize: 14, fontWeight: 700 }}>Merek mobil</label>
+                    <select id="brand" value={newBrand} required
+                      onChange={(e) => { setNewBrand(e.target.value); setAddErr(''); }}
+                      style={{ width: '100%', minHeight: 48, boxSizing: 'border-box', padding: '0 12px', border: '1.5px solid ' + (newBrand ? MUTED : INK), borderRadius: 10, background: '#FFFFFF', color: INK, fontSize: 16 }}>
+                      <option value="">— pilih merek —</option>
+                      {CAR_BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
+                    </select>
+                    {newBrand === OTHER_BRAND && (
+                      <input id="brand-custom" type="text" autoFocus placeholder="Tulis merek mobil, contoh: Peugeot" value={newBrandCustom}
+                        onChange={(e) => { setNewBrandCustom(e.target.value); setAddErr(''); }}
+                        style={{ width: '100%', height: 48, boxSizing: 'border-box', padding: '0 14px', border: '1.5px solid ' + MUTED, borderRadius: 10, background: '#FFFFFF', color: INK, fontSize: 16 }} />
+                    )}
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label htmlFor="plate" style={{ fontSize: 14, fontWeight: 700 }}>Plat nomor</label>
-                    <input id="plate" type="text" placeholder="B 1234 XYZ" value={newPlate}
-                      onChange={(e) => setNewPlate(e.target.value)}
+                    <input id="plate" type="text" autoCapitalize="characters" placeholder="B 1234 XYZ" value={newPlate}
+                      onChange={(e) => { setNewPlate(e.target.value.toUpperCase()); setAddErr(''); }}
                       style={{ width: '100%', height: 48, boxSizing: 'border-box', padding: '0 14px', border: '1.5px solid ' + MUTED, borderRadius: 10, background: '#FFFFFF', color: INK, fontSize: 16 }} />
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <label htmlFor="model" style={{ fontSize: 14, fontWeight: 700 }}>Tipe dan tahun (opsional)</label>
-                    <input id="model" type="text" placeholder="Contoh: Toyota Avanza 2018" value={newModel}
+                    <input id="model" type="text" placeholder="Contoh: Avanza 2018" value={newModel}
                       onChange={(e) => setNewModel(e.target.value)}
                       style={{ width: '100%', height: 48, boxSizing: 'border-box', padding: '0 14px', border: '1.5px solid ' + MUTED, borderRadius: 10, background: '#FFFFFF', color: INK, fontSize: 16 }} />
                   </div>
-                  <button type="button" onClick={saveCar}
-                    style={{ height: 48, border: 'none', borderRadius: 10, background: INK, color: '#FFFFFF', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+                  {addErr ? <div role="alert" style={{ fontSize: 13, color: '#B42318', background: '#FDE8E6', borderRadius: 10, padding: '10px 12px' }}>{addErr}</div> : null}
+                  <button type="button" onClick={saveCar} disabled={!canSaveCar}
+                    style={{ minHeight: 48, border: 'none', borderRadius: 10, background: canSaveCar ? accent : LINE, color: canSaveCar ? INK : GRAY, fontSize: 15, fontWeight: 700, cursor: canSaveCar ? 'pointer' : 'default' }}>
                     Simpan mobil
                   </button>
+                  <div style={{ fontSize: 12, lineHeight: 1.5, color: GRAY }}>Merek dan plat nomor dipakai mekanik untuk mengenali mobil. Tipe dan tahun membantu riwayat servis.</div>
                 </div>
               )}
             </div>
@@ -536,7 +562,7 @@ function App() {
                 <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                     <div style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</div>
-                    <div style={{ fontSize: 14, color: GRAY }}>{c.model}</div>
+                    <div style={{ fontSize: 14, color: GRAY }}>{carTitle(c)}</div>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {SERVICES.map((sv) => {
@@ -655,7 +681,7 @@ function App() {
                 <div key={cc.plate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
                     <span style={{ fontSize: 16, fontWeight: 800 }}>{cc.plate}</span>
-                    <span style={{ fontSize: 13, color: GRAY }}>{cc.model}</span>
+                    <span style={{ fontSize: 13, color: GRAY }}>{carTitle(cc)}</span>
                   </div>
                   <span style={{ fontSize: 14, fontWeight: 700, textAlign: 'right' }}>{cc.svc}</span>
                 </div>

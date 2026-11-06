@@ -20,7 +20,8 @@ w.eval(`window.B = {
   rescheduleBooking, setCarDone, updateBooking, archiveBooking, restoreBooking, purgeBooking,
   loadVehicles, upsertVehicle, seedSampleData, clearSampleData, hasSampleData,
   findBookingForCustomer, mechanicSummary, durText, estimateMinutes, holdsSlot, carsDone,
-  isUnassigned, mechHasBooking, readAccent, writeAccent, normPhone
+  isUnassigned, mechHasBooking, readAccent, writeAccent, normPhone,
+  CAR_BRANDS, OTHER_BRAND, carTitle
 }`);
 
 const B = w.B;
@@ -29,6 +30,7 @@ const ok = (name, cond) => rows.push([name, !!cond]);
 
 /* ---------- 1. konfigurasi master ---------- */
 ok('katalog servis 6 item', B.SERVICE_CATALOG.length === 6);
+ok('daftar merek tersedia + opsi Lainnya', B.CAR_BRANDS.length >= 10 && B.CAR_BRANDS.indexOf(B.OTHER_BRAND) !== -1);
 ok('mekanik 4 orang', B.MECHANICS.length === 4);
 ok('tanggal pertama = hari ini', B.upcomingDays(1)[0].iso === B.todayISO());
 ok('tidak ada tanggal lampau', B.upcomingDays(7).every((d) => d.iso >= B.todayISO()));
@@ -140,10 +142,13 @@ ok('hapus permanen setelah arsip', B.purgeBooking(b4.id, 'admin').ok === true &&
 /* ---------- 10. garasi kendaraan ---------- */
 ok('nomor demo punya 2 mobil', B.loadVehicles('0812 0000 1234').length === 2);
 ok('nomor lain mulai kosong', B.loadVehicles('0899 7777 6666').length === 0);
-B.upsertVehicle('0899 7777 6666', { plate: 'b 9999 zz', model: 'Daihatsu Xenia' });
+const noBrand = B.upsertVehicle('0899 7777 6666', { plate: 'B 9999 ZZ', model: 'Xenia' });
+ok('merek wajib saat menambah mobil', noBrand.ok === false && /Merek/.test(noBrand.error));
+B.upsertVehicle('0899 7777 6666', { plate: 'b 9999 zz', brand: 'Daihatsu', model: 'Xenia' });
 const mine = B.loadVehicles('0899 7777 6666');
 ok('mobil baru tersimpan & plat rapi', mine.length === 1 && mine[0].plate === 'B 9999 ZZ');
-B.upsertVehicle('0899 7777 6666', { plate: 'B 9999 ZZ', model: 'Daihatsu Xenia 2022' });
+ok('merek mobil tersimpan', mine[0].brand === 'Daihatsu');
+B.upsertVehicle('0899 7777 6666', { plate: 'B 9999 ZZ', brand: 'Daihatsu', model: 'Xenia 2022' });
 ok('plat sama tidak duplikat', B.loadVehicles('0899 7777 6666').length === 1);
 ok('nomor HP dinormalkan', B.normPhone('+62 812-0000-1234') === '081200001234');
 
@@ -167,7 +172,20 @@ ok('nomor salah ditolak', B.findBookingForCustomer(b3.id, '0800 0000 0000').ok =
 ok('kode salah ditolak', B.findBookingForCustomer('BK-XXXX', '0814 4444 5555').ok === false);
 ok('tanpa nomor ditolak', B.findBookingForCustomer(b3.id, '').ok === false);
 
-/* ---------- 14. ringkasan durasi ---------- */
+/* ---------- 14. merek mobil ---------- */
+ok('nama mobil gabung merek + tipe', B.carTitle({ brand: 'Toyota', model: 'Avanza 2018' }) === 'Toyota Avanza 2018');
+ok('data lama tanpa merek tetap tampil', B.carTitle({ model: 'Avanza 2018' }) === 'Avanza 2018');
+ok('mobil tanpa merek & tipe tidak kosong', B.carTitle({}) === 'Mobil');
+const brandSaved = B.saveBooking({
+  phone: '0817 7777 8888', role: 'owner',
+  cars: [{ plate: 'B 11 BR', brand: 'Wuling', model: 'Cortez 2021', svc: 'Ganti oli', mech: '', done: false }],
+  dateISO: day.iso, dayFull: day.full, slot: '11:30', actor: 'admin'
+});
+ok('merek ikut tersimpan di booking', B.findBooking(brandSaved.id).cars[0].brand === 'Wuling');
+ok('data contoh punya merek', B.seedSampleData() && B.loadBookings().filter((b) => b.sample).every((b) => b.cars.every((c) => c.brand)));
+B.clearSampleData();
+
+/* ---------- 15. ringkasan durasi ---------- */
 ok('durasi dari katalog', B.durText('Ganti oli') === '±45 menit');
 ok('durasi jam', B.durText('Servis berkala') === '±2 jam');
 ok('durasi belum pasti', B.durText('Ada keluhan').indexOf('cek dulu') === 0);

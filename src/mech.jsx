@@ -295,7 +295,7 @@ function JobCard({ b, accent, me, onChanged }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div>
                   <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
-                  <span style={{ fontSize: 13, color: GRAY }}> · {c.model}</span>
+                  <span style={{ fontSize: 13, color: GRAY }}> · {carTitle(c)}</span>
                 </div>
                 <div style={{ fontSize: 13, color: GRAY }}>{c.svc} · {durText(c.svc)} · {c.mech ? c.mech : 'belum ada mekanik'}</div>
               </div>

@@ -22,6 +22,14 @@ const DEFAULT_ACCENT = '#FFB81C';
  * ============================================================ */
 
 /* Katalog servis + durasi (menit). mins = 0 artinya "dicek dulu". */
+/* Merek mobil yang umum di bengkel Indonesia. Dipakai pelanggan & walk-in
+ * admin. "Lainnya" memunculkan kolom isian bebas di kedua portal. */
+const CAR_BRANDS = [
+  'Toyota', 'Daihatsu', 'Honda', 'Suzuki', 'Mitsubishi', 'Nissan', 'Isuzu',
+  'Wuling', 'Hyundai', 'Kia', 'Mazda', 'Chevrolet', 'Ford', 'Hino', 'Lainnya'
+];
+const OTHER_BRAND = 'Lainnya';
+
 const SERVICE_CATALOG = [
   { id: 'oli', name: 'Ganti oli', mins: 45 },
   { id: 'berkala', name: 'Servis berkala', mins: 120 },
@@ -204,6 +212,7 @@ function useAccent() {
 function normalizeCar(car, booking) {
   const c = Object.assign({}, car);
   c.plate = c.plate || '-';
+  c.brand = c.brand || '';   /* data lama belum punya merek → kosong */
   c.model = c.model || '';
   c.svc = c.svc || '-';
   if (typeof c.done !== 'boolean') {
@@ -383,6 +392,7 @@ function saveBooking(data) {
   }, data);
   booking.cars = (booking.cars || []).map((c) => ({
     plate: c.plate || '-',
+    brand: c.brand || '',
     model: c.model || '',
     svc: c.svc || '-',
     mech: c.mech || '',
@@ -593,8 +603,8 @@ function persistVehicleMap(map) {
 
 const DEMO_PHONE = '0812 0000 1234';
 const DEMO_CARS = [
-  { plate: 'B 1234 XYZ', model: 'Toyota Avanza 2018', last: 'Servis terakhir 12 Agu 2026' },
-  { plate: 'B 5678 ABC', model: 'Honda Brio 2020', last: 'Servis terakhir 3 Mei 2026' }
+  { plate: 'B 1234 XYZ', brand: 'Toyota', model: 'Avanza 2018', last: 'Servis terakhir 12 Agu 2026' },
+  { plate: 'B 5678 ABC', brand: 'Honda', model: 'Brio 2020', last: 'Servis terakhir 3 Mei 2026' }
 ];
 
 function loadVehicles(phone) {
@@ -618,8 +628,10 @@ function upsertVehicle(phone, car) {
   const list = Array.isArray(map[key]) ? map[key].slice() : [];
   const plate = String(car.plate || '').trim().toUpperCase();
   if (!plate) return { ok: false, error: 'Plat nomor wajib diisi.' };
+  const brand = String(car.brand || '').trim();
+  if (!brand) return { ok: false, error: 'Merek mobil wajib diisi.' };
   const existing = list.findIndex((c) => c.plate === plate);
-  const entry = { plate: plate, model: car.model || 'Tipe belum diisi', last: 'Baru ditambahkan' };
+  const entry = { plate: plate, brand: brand, model: car.model || 'Tipe belum diisi', last: 'Baru ditambahkan' };
   if (existing === -1) list.push(entry);
   else list[existing] = Object.assign({}, list[existing], entry);
   map[key] = list;
@@ -646,17 +658,17 @@ function seedSampleData() {
   const dev = ['Pak Budi', 'Andi', 'Rizal'];
   const base = [
     { status: 'in_progress', hour: 7, minute: 42, phone: '0812 3456 7890', role: 'owner',
-      cars: [{ plate: 'B 1234 XYZ', model: 'Toyota Avanza 2018', svc: 'Ganti oli', mech: 'Pak Budi' },
-             { plate: 'B 5678 ABC', model: 'Honda Brio 2020', svc: 'Cek dan servis rem', mech: 'Andi' }],
+      cars: [{ plate: 'B 1234 XYZ', brand: 'Toyota', model: 'Avanza 2018', svc: 'Ganti oli', mech: 'Pak Budi' },
+             { plate: 'B 5678 ABC', brand: 'Honda', model: 'Brio 2020', svc: 'Cek dan servis rem', mech: 'Andi' }],
       note: 'Bunyi berdecit saat mengerem pelan.', wait: 'tunggu', slot: '08:30', dayIndex: 0 },
     { status: 'confirmed', hour: 8, minute: 15, phone: '0821 9876 5432', role: 'driver', ownerPhone: '0813 1111 2222',
-      cars: [{ plate: 'D 9012 KLM', model: 'Mitsubishi Xpander 2021', svc: 'Servis berkala', mech: '' }],
+      cars: [{ plate: 'D 9012 KLM', brand: 'Mitsubishi', model: 'Xpander 2021', svc: 'Servis berkala', mech: '' }],
       note: '', wait: 'tinggal', slot: '13:00', dayIndex: 0 },
     { status: 'confirmed', hour: 9, minute: 5, phone: '0857 2233 4455', role: 'owner',
-      cars: [{ plate: 'A 3345 QWE', model: 'Suzuki Ertiga 2019', svc: 'Belum tahu, minta dicek', mech: 'Rizal' }],
+      cars: [{ plate: 'A 3345 QWE', brand: 'Suzuki', model: 'Ertiga 2019', svc: 'Belum tahu, minta dicek', mech: 'Rizal' }],
       note: 'Lampu depan sebelah kiri redup, A/C kurang dingin pagi hari.', wait: 'tunggu', slot: '10:00', dayIndex: Math.min(1, days.length - 1) },
     { status: 'done', hour: 8, minute: 55, phone: '0812 0000 1234', role: 'owner',
-      cars: [{ plate: 'B 7788 MNO', model: 'Toyota Innova 2016', svc: 'Servis AC', mech: 'Andi' }],
+      cars: [{ plate: 'B 7788 MNO', brand: 'Toyota', model: 'Innova 2016', svc: 'Servis AC', mech: 'Andi' }],
       note: '', wait: 'tinggal', slot: '11:30', dayIndex: 0 }
   ];
   const created = base.map((s, i) => {
@@ -699,6 +711,15 @@ function clearSampleData() {
 /* ============================================================
  *  11. RINGKASAN UNTUK TAMPILAN
  * ============================================================ */
+
+/* Nama mobil untuk tampilan: "Toyota Avanza 2018"; data lama tanpa merek
+ * tetap tampil apa adanya. */
+function carTitle(car) {
+  const brand = String((car && car.brand) || '').trim();
+  const model = String((car && car.model) || '').trim();
+  if (brand && model) return brand + ' ' + model;
+  return brand || model || 'Mobil';
+}
 
 function carsDone(b) {
   return (b.cars || []).filter((c) => c.done).length;

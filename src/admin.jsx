@@ -203,7 +203,7 @@ function BookingCard({ b, accent, onChange }) {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
               <div style={{ minWidth: 0 }}>
                 <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
-                <span style={{ fontSize: 13, color: GRAY }}> · {c.model}</span>
+                <span style={{ fontSize: 13, color: GRAY }}> · {carTitle(c)}</span>
               </div>
               <span style={{ fontSize: 14, fontWeight: 700 }}>{c.svc}</span>
             </div>
@@ -317,6 +317,8 @@ function WalkInForm({ accent, onCreated }) {
   const [role, setRole] = useState('owner');
   const [ownerPhone, setOwnerPhone] = useState('');
   const [plate, setPlate] = useState('');
+  const [brand, setBrand] = useState('');
+  const [brandCustom, setBrandCustom] = useState('');
   const [model, setModel] = useState('');
   const [svcId, setSvcId] = useState(SERVICE_CATALOG[0].id);
   const [dayIdx, setDayIdx] = useState(0);
@@ -326,9 +328,12 @@ function WalkInForm({ accent, onCreated }) {
 
   const reset = () => {
     setPhone(''); setRole('owner'); setOwnerPhone('');
-    setPlate(''); setModel(''); setSvcId(SERVICE_CATALOG[0].id);
+    setPlate(''); setBrand(''); setBrandCustom(''); setModel('');
+    setSvcId(SERVICE_CATALOG[0].id);
     setDayIdx(0); setSlot(''); setErr('');
   };
+
+  const brandValue = () => (brand === OTHER_BRAND ? brandCustom.trim() : brand);
 
   const submit = () => {
     const day = days[dayIdx] || days[0];
@@ -336,6 +341,7 @@ function WalkInForm({ accent, onCreated }) {
     if (normPhone(phone).length < 9) { setErr('Nomor HP pelanggan minimal 9 digit.'); return; }
     if (role === 'driver' && normPhone(ownerPhone).length < 9) { setErr('Nomor HP pemilik wajib untuk peran pengantar.'); return; }
     if (!plate.trim()) { setErr('Plat nomor wajib diisi.'); return; }
+    if (brandValue().length < 2) { setErr('Pilih merek mobil dulu (isi manual bila memilih Lainnya).'); return; }
     if (!slot) { setErr('Pilih jam kedatangan.'); return; }
     if (!slotOk(day.iso, slot, '', 1)) { setErr('Slot ' + slot + ' sudah penuh untuk tanggal itu.'); return; }
 
@@ -343,7 +349,7 @@ function WalkInForm({ accent, onCreated }) {
       phone: phone.trim(),
       role: role,
       ownerPhone: role === 'driver' ? ownerPhone.trim() : '',
-      cars: [{ plate: plate.trim().toUpperCase(), model: model.trim(), svc: svc.name, mech: '', done: false }],
+      cars: [{ plate: plate.trim().toUpperCase(), brand: brandValue(), model: model.trim(), svc: svc.name, mech: '', done: false }],
       note: 'Walk-in didaftarkan admin',
       wait: 'tunggu',
       dateISO: day.iso,
@@ -356,7 +362,7 @@ function WalkInForm({ accent, onCreated }) {
       status: 'arrived',
       actor: ACTOR
     });
-    upsertVehicle(phone, { plate: plate.trim().toUpperCase(), model: model.trim() });
+    upsertVehicle(phone, { plate: plate.trim().toUpperCase(), brand: brandValue(), model: model.trim() });
     reset();
     setOpen(false);
     onCreated('Walk-in ' + booking.id + ' ditambahkan (status Tiba).');
@@ -381,6 +387,18 @@ function WalkInForm({ accent, onCreated }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label htmlFor="wi-phone" style={{ fontSize: 12, fontWeight: 700, color: GRAY }}>Nomor WhatsApp</label>
           <input id="wi-phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="08xx xxxx xxxx" style={inputBase} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <label htmlFor="wi-brand" style={{ fontSize: 12, fontWeight: 700, color: GRAY }}>Merek mobil</label>
+          <select id="wi-brand" value={brand} onChange={(e) => { setBrand(e.target.value); setErr(''); }}
+            style={Object.assign({}, inputBase, brand ? {} : { borderColor: INK })}>
+            <option value="">— pilih merek —</option>
+            {CAR_BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+          {brand === OTHER_BRAND ? (
+            <input id="wi-brand-custom" type="text" placeholder="Tulis merek mobil" value={brandCustom}
+              onChange={(e) => { setBrandCustom(e.target.value); setErr(''); }} style={inputBase} />
+          ) : null}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           <label htmlFor="wi-plate" style={{ fontSize: 12, fontWeight: 700, color: GRAY }}>Plat nomor</label>
