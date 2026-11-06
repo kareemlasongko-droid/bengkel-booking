@@ -494,7 +494,7 @@ function App() {
                   <button key={c.id} type="button" aria-pressed={on} onClick={() => toggleCar(c.id)}
                     style={{ width: '100%', minHeight: 72, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', background: '#FFFFFF', color: INK, border: '2px solid ' + (on ? INK : LINE), borderRadius: 14, cursor: 'pointer' }}>
                     <BrandLogo brand={c.brand} size={44} />
-                    <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
+                    <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0, flex: 1 }}>
                       <span style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</span>
                       <span style={{ fontSize: 14, color: GRAY }}>{carTitle(c)}</span>
                       <span style={{ fontSize: 13, color: GRAY }}>{c.last}</span>

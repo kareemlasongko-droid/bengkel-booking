@@ -443,7 +443,7 @@
           style: { width: "100%", minHeight: 72, boxSizing: "border-box", padding: "14px 16px", display: "flex", alignItems: "center", gap: 12, textAlign: "left", background: "#FFFFFF", color: INK, border: "2px solid " + (on ? INK : LINE), borderRadius: 14, cursor: "pointer" }
         },
         /* @__PURE__ */ React.createElement(BrandLogo, { brand: c.brand, size: 44 }),
-        /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 3, minWidth: 0 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: GRAY } }, carTitle(c)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, c.last)),
+        /* @__PURE__ */ React.createElement("span", { style: { display: "flex", flexDirection: "column", gap: 3, minWidth: 0, flex: 1 } }, /* @__PURE__ */ React.createElement("span", { style: { fontSize: 17, fontWeight: 800 } }, c.plate), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 14, color: GRAY } }, carTitle(c)), /* @__PURE__ */ React.createElement("span", { style: { fontSize: 13, color: GRAY } }, c.last)),
         /* @__PURE__ */ React.createElement(BoxCheck, { on, accent })
       );
     }), /* @__PURE__ */ React.createElement(
