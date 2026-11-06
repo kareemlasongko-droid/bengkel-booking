@@ -19,7 +19,7 @@ const OUT = path.join(ROOT, 'public');
 /* File yang wajib ada di root dan ikut disajikan */
 const FILES = ['index.html', 'admin.html', 'mech.html', 'app.js', 'admin.js', 'mech.js', 'booking.js'];
 /* Folder aset yang ikut disalin */
-const DIRS = ['vendor'];
+const DIRS = ['vendor', 'assets'];
 
 async function exists(p) {
   try { await access(p); return true; } catch (e) { return false; }

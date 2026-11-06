@@ -62,6 +62,25 @@ const CheckIcon = ({ size = 14, width = 2.4 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" strokeWidth={width} strokeLinecap="round" strokeLinejoin="round"></path></svg>
 );
 
+/* Logo merek mobil (assets/brands/). Dekoratif: nama merek selalu ada
+ * sebagai teks di sebelahnya, jadi alt dikosongkan agar pembaca layar
+ * tidak membacanya dua kali. Merek bebas ("Lainnya") tanpa logo →
+ * kotak netral berisi huruf awal merek. */
+function BrandLogo({ brand, size = 40 }) {
+  const src = brandLogo(brand);
+  const initial = String(brand || '?').trim().charAt(0).toUpperCase() || '?';
+  /* Tinggi tetap (baris tetap rapi), lebar mengikuti bentuk logo: emblem
+   * persegi tetap 1:1, wordmark lebar (mis. Daihatsu) boleh sampai ~1,7x
+   * supaya tulisannya masih terbaca. */
+  return (
+    <span aria-hidden="true" style={{ height: size, minWidth: size, maxWidth: Math.round(size * 1.7), flex: 'none', boxSizing: 'border-box', borderRadius: 10, background: '#FFFFFF', border: '1px solid ' + LINE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: Math.max(4, Math.round(size * 0.1)), overflow: 'hidden' }}>
+      {src
+        ? <img src={src} alt="" loading="lazy" decoding="async" style={{ height: '100%', width: 'auto', maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+        : <span style={{ fontSize: Math.round(size * 0.4), fontWeight: 800, color: MUTED, lineHeight: 1 }}>{initial}</span>}
+    </span>
+  );
+}
+
 function StatusChip({ status }) {
   const meta = BOOKING_STATUS[status] || { label: status, tone: 'blue' };
   const t = TONE[meta.tone] || TONE.blue;
@@ -291,7 +310,7 @@ function JobCard({ b, accent, me, onChanged }) {
             <button key={c.plate + i} type="button" onClick={() => canToggle && run(setCarDone(b.id, i, !c.done, ACTOR + ':' + me), c.done ? c.plate + ' dibuka lagi.' : c.plate + ' ditandai selesai.')}
               disabled={!canToggle}
               style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', minHeight: 60, boxSizing: 'border-box', textAlign: 'left', background: BG, borderRadius: 12, padding: '10px 12px', border: mine ? '2px solid ' + accent : '2px solid transparent', cursor: canToggle ? 'pointer' : 'default', font: 'inherit', color: INK }}>
-              <CarCheck on={c.done} accent={accent} />
+              <BrandLogo brand={c.brand} size={40} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div>
                   <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
@@ -299,7 +318,10 @@ function JobCard({ b, accent, me, onChanged }) {
                 </div>
                 <div style={{ fontSize: 13, color: GRAY }}>{c.svc} · {durText(c.svc)} · {c.mech ? c.mech : 'belum ada mekanik'}</div>
               </div>
-              {canToggle ? <span style={{ fontSize: 11, fontWeight: 800, color: GRAY, whiteSpace: 'nowrap' }}>{c.done ? 'selesai' : 'tandai selesai'}</span> : null}
+              <span style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 2 }}>
+                <CarCheck on={c.done} accent={accent} />
+                {canToggle ? <span style={{ fontSize: 11, fontWeight: 800, color: GRAY, whiteSpace: 'nowrap' }}>{c.done ? 'selesai' : 'tandai selesai'}</span> : null}
+              </span>
             </button>
           );
         })}

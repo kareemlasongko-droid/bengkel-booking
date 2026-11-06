@@ -23,12 +23,39 @@ const DEFAULT_ACCENT = '#FFB81C';
 
 /* Katalog servis + durasi (menit). mins = 0 artinya "dicek dulu". */
 /* Merek mobil yang umum di bengkel Indonesia. Dipakai pelanggan & walk-in
- * admin. "Lainnya" memunculkan kolom isian bebas di kedua portal. */
+ * admin. "Lainnya" memunculkan kolom isian bebas di kedua portal.
+ * Merek di daftar ini punya logo di assets/brands/ (lihat brandLogo). */
 const CAR_BRANDS = [
   'Toyota', 'Daihatsu', 'Honda', 'Suzuki', 'Mitsubishi', 'Nissan', 'Isuzu',
-  'Wuling', 'Hyundai', 'Kia', 'Mazda', 'Chevrolet', 'Ford', 'Hino', 'Lainnya'
+  'Wuling', 'Hyundai', 'Kia', 'Mazda', 'Chevrolet', 'Ford', 'Hino',
+  'Peugeot', 'BYD', 'Chery', 'Geely', 'Subaru', 'Mercedes-Benz', 'BMW',
+  'Audi', 'Volkswagen', 'Datsun', 'Lainnya'
 ];
 const OTHER_BRAND = 'Lainnya';
+
+/* Logo merek: berkas PNG kecil di assets/brands/. Nama merek bebas
+ * ("Lainnya") tidak punya logo — tampilan memakai huruf awal merek. */
+const BRAND_LOGO_DIR = 'assets/brands/';
+const BRAND_LOGO_SLUGS = [
+  'toyota', 'daihatsu', 'honda', 'suzuki', 'mitsubishi', 'nissan', 'isuzu',
+  'wuling', 'hyundai', 'kia', 'mazda', 'chevrolet', 'ford', 'hino',
+  'peugeot', 'byd', 'chery', 'geely', 'subaru', 'mercedes-benz', 'bmw',
+  'audi', 'volkswagen', 'datsun'
+];
+
+function brandSlug(brand) {
+  return String(brand || '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+/* '' bila merek tidak punya logo (merek isian bebas / masih kosong). */
+function brandLogo(brand) {
+  const slug = brandSlug(brand);
+  if (!slug || BRAND_LOGO_SLUGS.indexOf(slug) === -1) return '';
+  return BRAND_LOGO_DIR + slug + '.png';
+}
 
 const SERVICE_CATALOG = [
   { id: 'oli', name: 'Ganti oli', mins: 45 },

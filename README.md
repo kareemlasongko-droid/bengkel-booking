@@ -230,6 +230,7 @@ bengkel-booking/
 | Durasi per servis di portal mekanik | `SVC_MINS` di `src/mech.jsx` (samakan dengan `SERVICES` di `src/app.jsx`) |
 | Daftar servis + durasi | `SERVICE_CATALOG` di `booking.js` |
 | Daftar merek mobil (dropdown pelanggan & walk-in) | `CAR_BRANDS` di `booking.js` — opsi terakhir `Lainnya` memunculkan kolom isian bebas |
+| Logo merek mobil | `assets/brands/<slug>.png` + `BRAND_LOGO_SLUGS` di `booking.js` — lihat `assets/brands/CREDITS.md` |
 | Jam & kuota per jam | `SLOT_TEMPLATE` di `booking.js` |
 | Mekanik (nama, HP, PIN) | `MECHANICS` di `booking.js` |
 | Tanggal yang ditawarkan | `DAYS_SHOWN`/`DAYS_AHEAD`, `CLOSED_DOW`, `HOLIDAYS` di `booking.js` |
@@ -290,6 +291,27 @@ saat menguji tiga portal berdampingan.
 Hasil build sudah disertakan, jadi build ulang hanya perlu jika Anda
 mengedit sumber JSX.
 
+## Logo merek mobil
+
+Setiap merek di `CAR_BRANDS` punya logo PNG kecil di `assets/brands/`
+(24 merek, ±124 KB total). Logo tampil di:
+
+- **portal pelanggan** — daftar mobil di garasi, kartu servis per mobil,
+  ringkasan konfirmasi, dan pratinjau di form tambah mobil;
+- **panel admin** — tiap mobil pada kartu booking (sebelum plat nomor) dan
+  pratinjau pada form walk-in;
+- **portal mekanik** — tiap mobil pada kartu tugas.
+
+`brandLogo(brand)` di `booking.js` memetakan nama merek → berkas
+(`'Mercedes-Benz'` → `assets/brands/mercedes-benz.png`). Merek isian bebas
+("Lainnya") tidak punya logo dan ditampilkan sebagai kotak netral berisi
+huruf awal merek — jadi menambah merek baru tidak pernah membuat tampilan
+rusak. Untuk menambah logo: `assets/brands/CREDITS.md`.
+
+Logo adalah merek dagang pabrikan; dipakai hanya untuk menandai merek mobil
+pada pesanan, bukan klaim kerja sama. Detail & sumber ada di
+`assets/brands/CREDITS.md`.
+
 ## Uji otomatis
 
 ```bash
@@ -297,10 +319,10 @@ npm run build   # tes UI memakai bundle hasil build
 npm test        # domain (booking.js) + UI end-to-end 3 portal (jsdom)
 ```
 
-- `tests/domain.test.mjs` — 71 cek aturan murni: kuota slot, bentrok mekanik,
+- `tests/domain.test.mjs` — 86 cek aturan murni: kuota slot, bentrok mekanik,
   alur status, check-in, batal/tidak datang, reschedule, whitelist field,
   arsip, garasi kendaraan, data contoh, pencarian booking pelanggan.
-- `tests/ui.test.mjs` — 74 cek UI di jsdom untuk portal pelanggan, admin, dan
+- `tests/ui.test.mjs` — 99 cek UI di jsdom untuk portal pelanggan, admin, dan
   mekanik: alur booking 5 langkah, pencegahan kirim ganda, cek status dan
   pembatalan, check-in admin, penugasan mekanik, walk-in, login mekanik, plus
   audit ukuran target sentuh (semua tombol ≥ 44 px).

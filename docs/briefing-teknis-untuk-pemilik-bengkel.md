@@ -31,8 +31,8 @@ Kalau hanya diingat satu kalimat: **"Alurnya sudah utuh dan bisa dicoba hari ini
 | **Hosting** | **Vercel**, static build (`outputDirectory: public`, framework "Other") | Gratis untuk trafik kecil; deploy tiap push ke `main`. |
 | **Domain** | Subdomain Vercel (`.vercel.app`); domain sendiri tinggal ditambahkan di dashboard | Bisa pakai `booking.namabengkel.com` nanti. |
 | **Build** | `npm run build` (esbuild) → `npm run build:site` (salin ke `public/`) → Vercel menjalankan `npm run vercel-build` | Tidak ada proses build yang rapuh. |
-| **Tes** | `npm test` → **145 cek otomatis** (71 aturan domain + 74 UI 3 portal, jsdom) | Bisa ditunjukkan: setiap perubahan dicek ulang otomatis, termasuk "semua tombol ≥ 44 px". |
-| **Ukuran** | Muat pertama halaman pelanggan: **65 KB** (gzip, termasuk React) | Ringan untuk jaringan 3G di bengkel. |
+| **Tes** | `npm test` → **185 cek otomatis** (86 aturan domain + 99 UI 3 portal, jsdom) | Bisa ditunjukkan: setiap perubahan dicek ulang otomatis, termasuk "semua tombol ≥ 44 px". |
+| **Ukuran** | Muat pertama halaman pelanggan: **65 KB** (gzip, termasuk React); logo merek ±124 KB total dan dimuat malas per merek yang tampil | Ringan untuk jaringan 3G di bengkel. |
 
 ### 2.2 Isi kode (kalau ditanya "seberapa besar?")
 
@@ -48,7 +48,8 @@ Kalau hanya diingat satu kalimat: **"Alurnya sudah utuh dan bisa dicoba hari ini
 
 | Konstanta | Isi sekarang | Guna saat presentasi |
 |---|---|---|
-| `CAR_BRANDS` | 14 merek umum (Toyota, Daihatsu, Honda, …) + opsi **Lainnya** untuk isi bebas; wajib dipilih saat menambah mobil & walk-in | Ganti/tambah merek sesuai pelanggan bengkel |
+| `CAR_BRANDS` | 24 merek umum (Toyota, Daihatsu, Honda, Suzuki, Mitsubishi, Nissan, Isuzu, Wuling, Hyundai, Kia, Mazda, Chevrolet, Ford, Hino, Peugeot, BYD, Chery, Geely, Subaru, Mercedes-Benz, BMW, Audi, Volkswagen, Datsun) + opsi **Lainnya**; wajib dipilih saat menambah mobil & walk-in | Ganti/tambah merek sesuai pelanggan bengkel |
+| Logo merek | `assets/brands/` (24 berkas, ±124 KB) + `BRAND_LOGO_SLUGS` | Merek tanpa logo otomatis jadi kotak huruf awal — tidak pernah rusak |
 | `SERVICE_CATALOG` | 6 servis + durasi (oli 45 mnt, berkala 120, rem 60, AC 90, keluhan/cek = 0) | Ganti nama servis & durasi sesuai bengkel asli → terasa "punya mereka" |
 | `MECHANICS` | 4 mekanik: Pak Budi `/1111`, Andi `/2222`, Rizal `/3333`, Dedi `/4444` | Ganti nama & nomor HP asli sebelum demo |
 | `SLOT_TEMPLATE` | 08:30, 10:00, 11:30, 13:00, 14:30, 16:00 + kuota per jam | Sesuaikan jam buka bengkel |
@@ -94,7 +95,7 @@ Konfirmasi → Tiba → Dikerjakan → Selesai
 
 ### 3.1 Persiapan teknis (H-1)
 
-- [ ] `npm install && npm run build && npm run test` → pastikan **145 cek lulus**. Screenshot hasilnya untuk lampiran.
+- [ ] `npm install && npm run build && npm run test` → pastikan **185 cek lulus**. Screenshot hasilnya untuk lampiran.
 - [ ] Deploy ulang (`git push` → Vercel) dan cek **ketiga URL** di HP asli, bukan cuma laptop: `/`, `/admin.html`, `/mech.html`.
 - [ ] Ganti nama bengkel pada teks `[Nama Bengkel]` (3 file HTML + 3 JSX) dan nama mekanik/jam buka di `booking.js`.
 - [ ] Siapkan **dua perangkat**: laptop (panel admin) + HP (portal pelanggan & mekanik).
@@ -129,7 +130,7 @@ Konfirmasi → Tiba → Dikerjakan → Selesai
 
 **4:00 — Pelanggan ubah sendiri (1 mnt).** "Cek status": masukkan kode + nomor → tampil status, kode check-in, progres per mobil, riwayat, tombol ubah jadwal & batal. *"Pelanggan tidak perlu telepon bengkel."*
 
-**5:00 — Admin (2 mnt).** Di laptop: kartu booking masuk → masukkan kode check-in **salah** dulu (ditolak) → kode benar → status *Tiba* → pilih mekanik per mobil → coba pilih mekanik yang sudah sibuk (ditolak sistem, tunjukkan pesannya) → tekan *Arsipkan* lalu tunjukkan tab *Arsip*.
+**5:00 — Admin (2 mnt).** Di laptop: kartu booking masuk, tiap mobil sudah membawa **logo mereknya** (mempercepat mengenali unit) → masukkan kode check-in **salah** dulu (ditolak) → kode benar → status *Tiba* → pilih mekanik per mobil → coba pilih mekanik yang sudah sibuk (ditolak sistem, tunjukkan pesannya) → tekan *Arsipkan* lalu tunjukkan tab *Arsip*.
 
 **7:00 — Mekanik (1,5 mnt).** Di HP, buka `/mech.html` → login nomor + PIN → **hanya tugas dia** → tandai mobil selesai → "Mulai dikerjakan" → "Selesai & serahkan".
 
@@ -173,6 +174,9 @@ Kalau kamu menyampaikan tabel ini dengan tenang, kredibilitasmu naik — owner b
 ### 5.2 Privasi data (singgung 30 detik)
 
 - Yang disimpan: nomor WhatsApp, merek + tipe + plat mobil, keluhan, riwayat servis.
+- Logo merek mobil adalah merek dagang pabrikan, dipakai hanya untuk menandai
+  merek pada pesanan (bukan klaim kerja sama) — sumber & aturan pakai ada di
+  `assets/brands/CREDITS.md`.
 - Sekarang data berada di perangkat pengguna, bukan di server — belum ada data pelanggan terkumpul di satu tempat.
 - Begitu naik ke server, wajib: persetujuan pemakaian nomor untuk pengingat/promo, masa simpan, dan hak hapus (UU PDP). Aplikasi sudah memisahkan dua izin: **pengingat servis** dan **info promo** — itu titik awal yang benar.
 
@@ -215,7 +219,7 @@ Biaya domain: ±Rp150–200rb/tahun. Hosting Vercel: gratis untuk skala bengkel 
 ```bash
 npm install            # sekali
 npm run build          # kompilasi src/*.jsx → app.js, admin.js, mech.js
-npm test               # 71 cek domain + 74 cek UI
+npm test               # 86 cek domain + 99 cek UI
 npm run vercel-build   # build + siapkan public/ (yang dijalankan Vercel)
 npm run preview        # coba hasil build di http://localhost:8000
 ```

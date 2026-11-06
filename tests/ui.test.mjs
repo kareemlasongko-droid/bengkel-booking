@@ -79,6 +79,10 @@ await tick();
 ok('pelanggan: masuk langkah mobil', text(c).includes('Mobil mana yang diservis?'));
 ok('pelanggan: garasi nomor demo terisi', text(c).includes('B 1234 XYZ') && text(c).includes('B 5678 ABC'));
 ok('pelanggan: merek mobil tampil di garasi', text(c).includes('Toyota Avanza 2018') && text(c).includes('Honda Brio 2020'));
+const logoSrcs = () => all(c, 'img').map((i) => i.getAttribute('src'));
+ok('pelanggan: logo Toyota & Honda tampil di garasi', logoSrcs().includes('assets/brands/toyota.png') && logoSrcs().includes('assets/brands/honda.png'));
+ok('pelanggan: logo tidak dobel dibaca pembaca layar', all(c, 'img').every((i) => i.getAttribute('alt') === ''));
+ok('pelanggan: logo dimuat malas (hemat data)', all(c, 'img').every((i) => i.getAttribute('loading') === 'lazy'));
 ok('pelanggan: mobil demo tersimpan dengan merek', c.eval("loadVehicles('0812 0000 1234')[0].brand") === 'Toyota');
 
 /* tambah mobil baru: merek wajib */
@@ -117,6 +121,7 @@ ok('pelanggan: merek bebas dihitung valid', btnExact(c, 'Simpan mobil').disabled
 click(c, btnExact(c, 'Simpan mobil'));
 await tick(250);
 ok('pelanggan: merek bebas tersimpan', c.eval("loadVehicles('0812 0000 1234').some((v) => v.brand === 'Peugeot')"));
+ok('pelanggan: merek tanpa logo memakai huruf awal', text(c).includes('P'));
 ok('pelanggan: progres menyebut langkah 2 dari 5', text(c).includes('Langkah 2 dari 5'));
 
 click(c, btnExact(c, 'Lanjut'));
@@ -219,6 +224,9 @@ click(a, btn(a, 'Semua ('));
 await tick(200);
 ok('admin: daftar semua booking tampil', text(a).includes('BK-C001') && text(a).includes('BK-C004'));
 ok('admin: data contoh ditandai CONTOH', text(a).includes('CONTOH'));
+const aLogos = () => all(a, 'img').map((i) => i.getAttribute('src'));
+ok('admin: logo merek tampil di kartu booking', aLogos().includes('assets/brands/toyota.png') && aLogos().includes('assets/brands/mitsubishi.png'));
+ok('admin: jumlah logo = jumlah mobil', all(a, 'img[src^="assets/brands/"]').length >= 5);
 
 /* check-in: kode salah lalu benar */
 const c2 = a.eval("findBooking('BK-C002')");
@@ -303,6 +311,8 @@ await tick(250);
 ok('mekanik: berhasil masuk sebagai Pak Budi', text(m).includes('Halo, Pak Budi'));
 ok('mekanik: hanya melihat tugas sendiri', text(m).includes('Tugas saya (1)'));
 ok('mekanik: mobil yang dipegang tampil', text(m).includes('B 1234 XYZ'));
+ok('mekanik: logo merek tampil di kartu tugas', all(m, 'img').map((i) => i.getAttribute('src')).includes('assets/brands/toyota.png'));
+ok('mekanik: logo memakai jalur yang sama dengan portal lain', all(m, 'img').every((i) => i.getAttribute('src').indexOf('assets/brands/') === 0));
 
 const carRow = all(m, 'button').find((b) => norm(b.textContent).includes('B 1234 XYZ'));
 ok('mekanik: mobil bisa diketuk untuk menandai selesai', !!carRow && !carRow.disabled);

@@ -21,7 +21,7 @@ w.eval(`window.B = {
   loadVehicles, upsertVehicle, seedSampleData, clearSampleData, hasSampleData,
   findBookingForCustomer, mechanicSummary, durText, estimateMinutes, holdsSlot, carsDone,
   isUnassigned, mechHasBooking, readAccent, writeAccent, normPhone,
-  CAR_BRANDS, OTHER_BRAND, carTitle
+  CAR_BRANDS, OTHER_BRAND, carTitle, brandSlug, brandLogo, BRAND_LOGO_SLUGS
 }`);
 
 const B = w.B;
@@ -173,6 +173,13 @@ ok('kode salah ditolak', B.findBookingForCustomer('BK-XXXX', '0814 4444 5555').o
 ok('tanpa nomor ditolak', B.findBookingForCustomer(b3.id, '').ok === false);
 
 /* ---------- 14. merek mobil ---------- */
+ok('logo merek dipetakan ke berkas', B.brandLogo('Toyota') === 'assets/brands/toyota.png');
+ok('merek dengan tanda hubung', B.brandLogo('Mercedes-Benz') === 'assets/brands/mercedes-benz.png');
+ok('merek huruf besar kecil sama saja', B.brandLogo('toyota') === B.brandLogo('TOYOTA'));
+ok('merek bebas tanpa logo', B.brandLogo('Peugeot') !== '' && B.brandLogo('Merek Karangan') === '');
+ok('merek kosong tanpa logo', B.brandLogo('') === '' && B.brandLogo(null) === '');
+ok('semua merek di daftar punya logo', B.CAR_BRANDS.filter((b) => b !== B.OTHER_BRAND).every((b) => B.brandLogo(b) !== ''));
+ok('slug merek rapi', B.brandSlug('  Mercedes-Benz ') === 'mercedes-benz' && B.brandSlug('BYD') === 'byd');
 ok('nama mobil gabung merek + tipe', B.carTitle({ brand: 'Toyota', model: 'Avanza 2018' }) === 'Toyota Avanza 2018');
 ok('data lama tanpa merek tetap tampil', B.carTitle({ model: 'Avanza 2018' }) === 'Avanza 2018');
 ok('mobil tanpa merek & tipe tidak kosong', B.carTitle({}) === 'Mobil');
