@@ -48,6 +48,7 @@ Kalau hanya diingat satu kalimat: **"Alurnya sudah utuh dan bisa dicoba hari ini
 
 | Konstanta | Isi sekarang | Guna saat presentasi |
 |---|---|---|
+| `CAR_BRANDS` | 14 merek umum (Toyota, Daihatsu, Honda, …) + opsi **Lainnya** untuk isi bebas; wajib dipilih saat menambah mobil & walk-in | Ganti/tambah merek sesuai pelanggan bengkel |
 | `SERVICE_CATALOG` | 6 servis + durasi (oli 45 mnt, berkala 120, rem 60, AC 90, keluhan/cek = 0) | Ganti nama servis & durasi sesuai bengkel asli → terasa "punya mereka" |
 | `MECHANICS` | 4 mekanik: Pak Budi `/1111`, Andi `/2222`, Rizal `/3333`, Dedi `/4444` | Ganti nama & nomor HP asli sebelum demo |
 | `SLOT_TEMPLATE` | 08:30, 10:00, 11:30, 13:00, 14:30, 16:00 + kuota per jam | Sesuaikan jam buka bengkel |
@@ -124,7 +125,7 @@ Konfirmasi → Tiba → Dikerjakan → Selesai
 
 **0:00 — Konteks (1 mnt).** Buka di HP: "Ini yang dilihat pelanggan. Tanpa install, tanpa bikin akun."
 
-**1:00 — Booking (3 mnt).** Isi nomor HP → kode demo → pilih mobil (perhatikan garasi otomatis terisi untuk nomor lama) → pilih servis (tunjukkan hint durasi) → **jadwal**: sorot label *Hari ini / Besok*, tunjukkan jam **Penuh** otomatis dan jam yang tersisa → konfirmasi → **kode booking + kode check-in**.
+**1:00 — Booking (3 mnt).** Isi nomor HP → kode demo → pilih mobil (garasi nomor lama terisi otomatis lengkap dengan **merek + tipe**; coba *Tambah mobil baru*: merek wajib dipilih, ada opsi *Lainnya* untuk merek yang tidak ada di daftar) → pilih servis (tunjukkan hint durasi) → **jadwal**: sorot label *Hari ini / Besok*, tunjukkan jam **Penuh** otomatis dan jam yang tersisa → konfirmasi → **kode booking + kode check-in**.
 
 **4:00 — Pelanggan ubah sendiri (1 mnt).** "Cek status": masukkan kode + nomor → tampil status, kode check-in, progres per mobil, riwayat, tombol ubah jadwal & batal. *"Pelanggan tidak perlu telepon bengkel."*
 
@@ -144,7 +145,7 @@ Konfirmasi → Tiba → Dikerjakan → Selesai
 2. Berapa mekanik, dan apakah satu mekanik bisa pegang 2 mobil sekaligus?
 3. Pelanggan biasanya booking atau langsung datang? (menentukan porsi fitur walk-in)
 4. Siapa yang pegang HP untuk update status: kasir, service advisor, atau mekanik?
-5. Perlu nomor polisi saja atau sekalian model/tahun untuk riwayat servis?
+5. Merek & tipe mobil apa yang paling banyak masuk? (merek sekarang wajib dipilih — daftarnya bisa disesuaikan di `CAR_BRANDS`)
 6. Ada hari tutup / tanggal libur yang harus dikunci?
 7. Perlu kirim pengingat servis berikutnya? Lewat WhatsApp pribadi atau WA Business?
 8. Apakah pelanggan minta estimasi harga di awal, atau cukup "dicek dulu"?
@@ -171,7 +172,7 @@ Kalau kamu menyampaikan tabel ini dengan tenang, kredibilitasmu naik — owner b
 
 ### 5.2 Privasi data (singgung 30 detik)
 
-- Yang disimpan: nomor WhatsApp, plat/model mobil, keluhan, riwayat servis.
+- Yang disimpan: nomor WhatsApp, merek + tipe + plat mobil, keluhan, riwayat servis.
 - Sekarang data berada di perangkat pengguna, bukan di server — belum ada data pelanggan terkumpul di satu tempat.
 - Begitu naik ke server, wajib: persetujuan pemakaian nomor untuk pengingat/promo, masa simpan, dan hak hapus (UU PDP). Aplikasi sudah memisahkan dua izin: **pengingat servis** dan **info promo** — itu titik awal yang benar.
 

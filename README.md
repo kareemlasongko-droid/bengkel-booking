@@ -229,6 +229,7 @@ bengkel-booking/
 | Akun mekanik (nama, nomor HP, PIN) | `MECHANICS` di `booking.js` (portal mekanik memakainya lewat alias `MECH_ACCOUNTS`) — dipakai juga oleh pilihan mekanik di `src/app.jsx` |
 | Durasi per servis di portal mekanik | `SVC_MINS` di `src/mech.jsx` (samakan dengan `SERVICES` di `src/app.jsx`) |
 | Daftar servis + durasi | `SERVICE_CATALOG` di `booking.js` |
+| Daftar merek mobil (dropdown pelanggan & walk-in) | `CAR_BRANDS` di `booking.js` — opsi terakhir `Lainnya` memunculkan kolom isian bebas |
 | Jam & kuota per jam | `SLOT_TEMPLATE` di `booking.js` |
 | Mekanik (nama, HP, PIN) | `MECHANICS` di `booking.js` |
 | Tanggal yang ditawarkan | `DAYS_SHOWN`/`DAYS_AHEAD`, `CLOSED_DOW`, `HOLIDAYS` di `booking.js` |
