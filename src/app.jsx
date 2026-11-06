@@ -82,6 +82,25 @@ function BoxCheck({ on, accent }) {
   );
 }
 
+/* Logo merek mobil (assets/brands/). Dekoratif: nama merek selalu ada
+ * sebagai teks di sebelahnya, jadi alt dikosongkan agar pembaca layar
+ * tidak membacanya dua kali. Merek bebas ("Lainnya") tanpa logo →
+ * kotak netral berisi huruf awal merek. */
+function BrandLogo({ brand, size = 40 }) {
+  const src = brandLogo(brand);
+  const initial = String(brand || '?').trim().charAt(0).toUpperCase() || '?';
+  /* Tinggi tetap (baris tetap rapi), lebar mengikuti bentuk logo: emblem
+   * persegi tetap 1:1, wordmark lebar (mis. Daihatsu) boleh sampai ~1,7x
+   * supaya tulisannya masih terbaca. */
+  return (
+    <span aria-hidden="true" style={{ height: size, minWidth: size, maxWidth: Math.round(size * 1.7), flex: 'none', boxSizing: 'border-box', borderRadius: 10, background: '#FFFFFF', border: '1px solid ' + LINE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: Math.max(4, Math.round(size * 0.1)), overflow: 'hidden' }}>
+      {src
+        ? <img src={src} alt="" loading="lazy" decoding="async" style={{ height: '100%', width: 'auto', maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+        : <span style={{ fontSize: Math.round(size * 0.4), fontWeight: 800, color: MUTED, lineHeight: 1 }}>{initial}</span>}
+    </span>
+  );
+}
+
 function AccentDot({ on, accent, color, onClick }) {
   return (
     <button type="button" aria-label={'Warna aksen ' + color} aria-pressed={on} onClick={onClick}
@@ -473,13 +492,14 @@ function App() {
                 const on = !!selected[c.id];
                 return (
                   <button key={c.id} type="button" aria-pressed={on} onClick={() => toggleCar(c.id)}
-                    style={{ width: '100%', minHeight: 72, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', background: '#FFFFFF', color: INK, border: '2px solid ' + (on ? INK : LINE), borderRadius: 14, cursor: 'pointer' }}>
-                    <BoxCheck on={on} accent={accent} />
+                    style={{ width: '100%', minHeight: 72, boxSizing: 'border-box', padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left', background: '#FFFFFF', color: INK, border: '2px solid ' + (on ? INK : LINE), borderRadius: 14, cursor: 'pointer' }}>
+                    <BrandLogo brand={c.brand} size={44} />
                     <span style={{ display: 'flex', flexDirection: 'column', gap: 3, minWidth: 0 }}>
                       <span style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</span>
                       <span style={{ fontSize: 14, color: GRAY }}>{carTitle(c)}</span>
                       <span style={{ fontSize: 13, color: GRAY }}>{c.last}</span>
                     </span>
+                    <BoxCheck on={on} accent={accent} />
                   </button>
                 );
               })}
@@ -498,6 +518,12 @@ function App() {
                       <option value="">— pilih merek —</option>
                       {CAR_BRANDS.map((b) => <option key={b} value={b}>{b}</option>)}
                     </select>
+                    {newBrand ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
+                        <BrandLogo brand={brandValue() || OTHER_BRAND} size={36} />
+                        <span style={{ fontSize: 13, color: GRAY }}>{brandValue() ? 'Merek: ' + brandValue() : 'Tulis merek mobilnya'}</span>
+                      </div>
+                    ) : null}
                     {newBrand === OTHER_BRAND && (
                       <input id="brand-custom" type="text" autoFocus placeholder="Tulis merek mobil, contoh: Peugeot" value={newBrandCustom}
                         onChange={(e) => { setNewBrandCustom(e.target.value); setAddErr(''); }}
@@ -560,9 +586,12 @@ function App() {
               const curSvc = SERVICES.find((x) => x.id === cur);
               return (
                 <div key={c.id} style={{ display: 'flex', flexDirection: 'column', gap: 14, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                    <div style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</div>
-                    <div style={{ fontSize: 14, color: GRAY }}>{carTitle(c)}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <BrandLogo brand={c.brand} size={40} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                      <div style={{ fontSize: 17, fontWeight: 800 }}>{c.plate}</div>
+                      <div style={{ fontSize: 14, color: GRAY }}>{carTitle(c)}</div>
+                    </div>
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
                     {SERVICES.map((sv) => {
@@ -678,10 +707,13 @@ function App() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12, padding: 16, background: '#FFFFFF', border: '1px solid ' + LINE, borderRadius: 16 }}>
               <div style={{ fontSize: 13, color: GRAY }}>Mobil dan servis</div>
               {confirmCars.map((cc) => (
-                <div key={cc.plate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12 }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
-                    <span style={{ fontSize: 16, fontWeight: 800 }}>{cc.plate}</span>
-                    <span style={{ fontSize: 13, color: GRAY }}>{carTitle(cc)}</span>
+                <div key={cc.plate} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                    <BrandLogo brand={cc.brand} size={36} />
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, minWidth: 0 }}>
+                      <span style={{ fontSize: 16, fontWeight: 800 }}>{cc.plate}</span>
+                      <span style={{ fontSize: 13, color: GRAY }}>{carTitle(cc)}</span>
+                    </div>
                   </div>
                   <span style={{ fontSize: 14, fontWeight: 700, textAlign: 'right' }}>{cc.svc}</span>
                 </div>

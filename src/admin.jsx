@@ -39,6 +39,25 @@ const CheckIcon = ({ size = 14, width = 2.4 }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M3 8.5l3.2 3L13 4.5" stroke="currentColor" strokeWidth={width} strokeLinecap="round" strokeLinejoin="round"></path></svg>
 );
 
+/* Logo merek mobil (assets/brands/). Dekoratif: nama merek selalu ada
+ * sebagai teks di sebelahnya, jadi alt dikosongkan agar pembaca layar
+ * tidak membacanya dua kali. Merek bebas ("Lainnya") tanpa logo →
+ * kotak netral berisi huruf awal merek. */
+function BrandLogo({ brand, size = 40 }) {
+  const src = brandLogo(brand);
+  const initial = String(brand || '?').trim().charAt(0).toUpperCase() || '?';
+  /* Tinggi tetap (baris tetap rapi), lebar mengikuti bentuk logo: emblem
+   * persegi tetap 1:1, wordmark lebar (mis. Daihatsu) boleh sampai ~1,7x
+   * supaya tulisannya masih terbaca. */
+  return (
+    <span aria-hidden="true" style={{ height: size, minWidth: size, maxWidth: Math.round(size * 1.7), flex: 'none', boxSizing: 'border-box', borderRadius: 10, background: '#FFFFFF', border: '1px solid ' + LINE, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: Math.max(4, Math.round(size * 0.1)), overflow: 'hidden' }}>
+      {src
+        ? <img src={src} alt="" loading="lazy" decoding="async" style={{ height: '100%', width: 'auto', maxWidth: '100%', objectFit: 'contain', display: 'block' }} />
+        : <span style={{ fontSize: Math.round(size * 0.4), fontWeight: 800, color: MUTED, lineHeight: 1 }}>{initial}</span>}
+    </span>
+  );
+}
+
 function StatusChip({ status }) {
   const meta = BOOKING_STATUS[status] || { label: status, tone: 'blue' };
   const t = TONE[meta.tone] || TONE.blue;
@@ -200,10 +219,13 @@ function BookingCard({ b, accent, onChange }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {b.cars.map((c, i) => (
           <div key={c.plate + i} style={{ display: 'flex', flexDirection: 'column', gap: 8, background: BG, borderRadius: 10, padding: '10px 12px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ minWidth: 0 }}>
-                <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
-                <span style={{ fontSize: 13, color: GRAY }}> · {carTitle(c)}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ minWidth: 0, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <BrandLogo brand={c.brand} size={38} />
+                <span style={{ minWidth: 0 }}>
+                  <span style={{ fontSize: 15, fontWeight: 800, textDecoration: c.done ? 'line-through' : 'none', color: c.done ? GRAY : INK }}>{c.plate}</span>
+                  <span style={{ fontSize: 13, color: GRAY }}> · {carTitle(c)}</span>
+                </span>
               </div>
               <span style={{ fontSize: 14, fontWeight: 700 }}>{c.svc}</span>
             </div>
@@ -398,6 +420,12 @@ function WalkInForm({ accent, onCreated }) {
           {brand === OTHER_BRAND ? (
             <input id="wi-brand-custom" type="text" placeholder="Tulis merek mobil" value={brandCustom}
               onChange={(e) => { setBrandCustom(e.target.value); setErr(''); }} style={inputBase} />
+          ) : null}
+          {brand ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <BrandLogo brand={brandValue() || OTHER_BRAND} size={32} />
+              <span style={{ fontSize: 12, color: GRAY }}>{brandValue() || 'isi merek'}</span>
+            </div>
           ) : null}
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
